@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.1";
+  const VERSION = "1.2";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -291,7 +291,6 @@
   // ---------- Bucle de scroll ----------
   const raiz = document.documentElement;
   const portada = $("#portada");
-  const pista = $(".portada-pista");
   const parrafos = $$(".lectura p").map((p) => ({ el: p, w: $$(".w", p), n: -1 }));
   const fotosActor = $$(".actor .foto img");
   const cintasEls = $$(".cinta").map((c) => ({ el: c, r: $(".rodillo", c), dir: +c.dataset.dir, x: 0, ancho: 0, visible: false }));
@@ -325,17 +324,19 @@
     ultimoY = y;
 
     // Portada: el título se desarma y la nena se achica
-    const recorrido = Math.max(1, pista.offsetHeight - vh);
+    // la portada ya no queda fija: el efecto dura lo que tarda en irse de la pantalla
+    const recorrido = Math.max(1, portada.offsetHeight * 0.85);
     const p = clamp(y / recorrido);
     if (Math.abs(p - ultimoP) > 0.001) {
       portada.style.setProperty("--p", p.toFixed(4));
       portada.classList.toggle("moviendo", p > 0 && p < 1);
       ultimoP = p;
     }
-    dock.classList.toggle("visible", y > recorrido * 0.9);
+    dock.classList.toggle("visible", y > portada.offsetHeight * 0.6);
 
     // Progreso total: el anillo se llena y la nena de la barra se achica
-    const total = clamp((y - recorrido) / Math.max(1, raiz.scrollHeight - vh - recorrido));
+    const inicio = portada.offsetHeight;
+    const total = clamp((y - inicio * 0.6) / Math.max(1, raiz.scrollHeight - vh - inicio * 0.6));
     avance.style.strokeDashoffset = (131.95 * (1 - total)).toFixed(2);
     mini.style.setProperty("--s", (1 - total * 0.62).toFixed(3));
 

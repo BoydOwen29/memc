@@ -74,9 +74,10 @@ html.menu-abierto { overflow: hidden; }
 .listo .foco-escena { opacity: 1; }
 
 /* ---------- Portada ---------- */
-.portada-pista { position: relative; height: 130vh; height: 130svh; }
+/* la portada corre con el dedo desde el primer momento (sin quedar fija): el efecto es un paralaje */
+.portada-pista { position: relative; }
 .portada {
-  position: sticky; top: 0; height: 100vh; height: 100svh; min-height: 340px;
+  position: relative; height: 100vh; height: 100svh; min-height: 340px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px var(--gutter) 72px; overflow: hidden;
   --tw: min(92vw, 640px, 92vh);
@@ -91,6 +92,7 @@ html.menu-abierto { overflow: hidden; }
   position: relative; width: var(--tw); aspect-ratio: 1969 / 861;
   margin: calc(var(--tw) * .1) 0 calc(var(--tw) * .12);
   rotate: -8deg; scale: calc(1 - var(--p, 0) * .14);
+  translate: 0 calc(var(--p, 0) * 42vh);
 }
 .titulo-obra noscript img { width: 100%; rotate: 8deg; }
 .pieza {
@@ -526,7 +528,7 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .pieza { translate: none; }
-  .titulo-obra { scale: none; }
+  .titulo-obra { scale: none; translate: none; }
   .pieza.figura { scale: none; }
   .js .pieza.palabra img, .js .pieza.figura img, .js .pieza.cordoba img { transform: none; opacity: 0; transition: opacity 1s ease var(--d); }
   .js .pieza.autores img { clip-path: none; opacity: 0; transition: opacity 1s ease var(--d); }
