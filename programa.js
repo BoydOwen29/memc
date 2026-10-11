@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.2";
+  const VERSION = "1.3";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -103,6 +103,7 @@
       ${titulo(["De qué", "se trata"])}
       ${s.pendiente && borrador ? '<p class="nota-pendiente" data-reveal="sube">Borrador: falta el texto oficial</p>' : ""}
       <div class="lectura">${s.parrafos.map((p) => `<p>${palabras(p)}</p>`).join("")}</div>
+      ${s.foto ? `<figure class="foto-obra" data-reveal="telon"><img src="${esc(s.foto.chica || s.foto.src)}" srcset="${esc(s.foto.chica || s.foto.src)} 800w, ${esc(s.foto.src)} 1600w" sizes="(min-width: 700px) 600px, 100vw" alt="${esc(s.foto.alt)}" loading="lazy" decoding="async"></figure>` : ""}
       ${(sello || s.dato) ? `<div class="premio">${sello}${s.dato ? `<p data-reveal="sube" style="--d:200ms">${esc(s.dato)}</p>` : ""}</div>` : ""}
       ${D.obra.duracion ? `<p class="duracion" data-reveal="sube">Duración: ${esc(D.obra.duracion)}</p>` : ""}
     `);
@@ -123,7 +124,7 @@
         <div class="elenco">${elenco.map((p, i) => `
           <article class="actor${i % 2 ? " der" : ""}" data-reveal="actor">
             <div class="marco"><div class="foto">${p.foto
-              ? `<img src="${esc(p.foto)}" alt="${esc(p.nombre)}" loading="lazy" decoding="async">`
+              ? `<img src="${esc(p.foto)}" alt="${esc(p.nombre ? p.nombre + " como " + p.personaje : p.personaje)}" loading="lazy" decoding="async">`
               : `<div class="sin-foto" aria-hidden="true"><span class="ini">${esc(p.personaje[0])}</span><img class="fig" src="img/figura-blanca.webp" alt=""></div>`}
             </div></div>
             <div class="info">
@@ -179,7 +180,7 @@
       ${kicker("Fotos")}
       ${titulo(["Así", "se vive"])}
       <div class="galeria${D.galeria.length === 1 ? " una" : ""}" data-reveal="sube">${D.galeria.map((g, i) => `
-        <button type="button" data-foto="${i}" aria-label="Ver foto ${i + 1} en grande">
+        <button type="button" data-foto="${i}" class="${g.vertical ? "vertical" : ""}" aria-label="Ver foto ${i + 1} en grande">
           <img src="${esc(g.chica || g.src)}" alt="${esc(g.alt)}" loading="lazy" decoding="async">
         </button>`).join("")}
       </div>
@@ -292,7 +293,7 @@
   const raiz = document.documentElement;
   const portada = $("#portada");
   const parrafos = $$(".lectura p").map((p) => ({ el: p, w: $$(".w", p), n: -1 }));
-  const fotosActor = $$(".actor .foto img");
+  const fotosActor = $$(".actor .foto img, .foto-obra img");
   const cintasEls = $$(".cinta").map((c) => ({ el: c, r: $(".rodillo", c), dir: +c.dataset.dir, x: 0, ancho: 0, visible: false }));
   let ultimoY = window.scrollY;
   let velocidad = 0;

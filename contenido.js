@@ -35,17 +35,21 @@ window.MEMC = {
       "Una comedia musical sobre el amor, el paso del tiempo y los vínculos que nos sostienen.",
     ],
     sello: "Premio Hugo · Mejor musical off · 2016 ·",
+    // foto grande que corta la sinopsis
+    foto: { src: "img/fotos/prensa-01-1600.webp", chica: "img/fotos/prensa-01-800.webp", alt: "Rita con sus hijos y el resto de la familia" },
     dato: "Escrita por los argentinos Ignacio Olivera y Juan Pablo Schapira, se presentó en Argentina, Chile, Perú, Panamá y República Dominicana.",
   },
 
   // foto: ruta dentro de img/elenco/ (ej. "img/elenco/rita.webp"), idealmente vertical.
   // Sin foto, muestra la inicial del personaje.
+  // Las fotos salen de las publicitarias (Drive "Audiovisuales MEMC"); qué actor hace cada personaje se dedujo
+  // por el vestuario: confirmarlo cuando pasen los nombres.
   elenco: [
-    { personaje: "Rita", nombre: "", foto: "", instagram: "" },
-    { personaje: "Diego", nombre: "", foto: "", instagram: "" },
-    { personaje: "Clara", nombre: "", foto: "", instagram: "" },
-    { personaje: "Germán", nombre: "", foto: "", instagram: "" },
-    { personaje: "Alicia", nombre: "", foto: "", instagram: "" },
+    { personaje: "Rita", nombre: "", foto: "img/elenco/rita.webp", instagram: "" },
+    { personaje: "Diego", nombre: "", foto: "img/elenco/diego.webp", instagram: "" },
+    { personaje: "Clara", nombre: "", foto: "img/elenco/clara.webp", instagram: "" },
+    { personaje: "Germán", nombre: "", foto: "img/elenco/german.webp", instagram: "" },
+    { personaje: "Alicia", nombre: "", foto: "img/elenco/alicia.webp", instagram: "" },
   ],
 
   // Números musicales, en orden: "Título" o { titulo: "…", quien: "Rita y Diego" }.
@@ -62,6 +66,7 @@ window.MEMC = {
     { rol: "Vestuario", nombres: [] },
     { rol: "Diseño de luces", nombres: [] },
     { rol: "Diseño gráfico", nombres: [] },
+    { rol: "Fotografía", nombres: [] },
     { rol: "Comunicación y redes", nombres: [] },
     { rol: "Producción general", nombres: ["Brux Producciones"] },
   ],
@@ -69,8 +74,15 @@ window.MEMC = {
   // Unas palabras de la dirección o de la producción. Párrafos separados por una línea en blanco.
   palabras: { texto: "", firma: "" },
 
+  // vertical: true para las fotos paradas (se muestran más angostas)
   galeria: [
-    { src: "img/fotos/foto-01-1600.webp", chica: "img/fotos/foto-01-800.webp", alt: "Detrás de escena de Mamá está más chiquita" },
+    { src: "img/fotos/prensa-02-1600.webp", chica: "img/fotos/prensa-02-800.webp", alt: "Rita abraza a Clara" },
+    { src: "img/fotos/prensa-03-1600.webp", chica: "img/fotos/prensa-03-800.webp", alt: "Diego y Clara jugando a los piratas con Rita", vertical: true },
+    { src: "img/fotos/prensa-04-1600.webp", chica: "img/fotos/prensa-04-800.webp", alt: "Diego y Clara abrazan a Rita" },
+    { src: "img/fotos/prensa-05-1600.webp", chica: "img/fotos/prensa-05-800.webp", alt: "Diego y Clara", vertical: true },
+    { src: "img/fotos/prensa-06-1600.webp", chica: "img/fotos/prensa-06-800.webp", alt: "Germán y Clara", vertical: true },
+    { src: "img/fotos/prensa-07-1600.webp", chica: "img/fotos/prensa-07-800.webp", alt: "Los piratas al ataque", vertical: true },
+    { src: "img/fotos/prensa-08-1600.webp", chica: "img/fotos/prensa-08-800.webp", alt: "El equipo de Mamá está más chiquita" },
   ],
 
   cierre: {
