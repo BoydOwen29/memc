@@ -1,6 +1,8 @@
 // Arma el programa a partir de contenido.js y le da movimiento.
+// La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
+  const VERSION = "1.1";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -27,7 +29,7 @@
   const tituloObra = $("#tituloObra");
   tituloObra.insertAdjacentHTML("beforeend", PIEZAS.map((p) => {
     const img = `<img src="img/titulo/${p.n}.webp" alt="" decoding="async">`;
-    return `<span class="pieza ${p.tipo}" style="--l:${p.l};--t:${p.t};--w:${p.w};--h:${p.h};--d:${p.d}ms;--dx:${p.dx || 0};--dy:${p.dy || 0}">${p.tipo === "figura" ? `<span class="f">${img}</span>` : img}</span>`;
+    return `<span class="pieza ${p.tipo}" style="--l:${p.l};--t:${p.t};--w:${p.w};--h:${p.h};--d:${p.d}ms;--dx:${p.dx || 0};--dy:${p.dy || 0}">${p.tipo === "figura" ? `<span class="f">${img}</span><i class="chispa"></i><i class="chispa"></i><i class="chispa"></i>` : img}</span>`;
   }).join(""));
 
   // ---------- Armado de secciones ----------
@@ -64,7 +66,7 @@
     const botones = [];
     if (D.entradas) botones.push(`<a class="boton" href="${esc(D.entradas)}" target="_blank" rel="noopener">Entradas</a>`);
     botones.push(`<button class="boton secundario" type="button" data-compartir>${ICONO_COMPARTIR}Compartir el programa</button>`);
-    agregar("esta-noche", "Esta noche", "#009380", `
+    agregar("esta-noche", "Esta noche", "teal", `
       ${kicker("Esta noche")}
       ${titulo(D.bienvenida.titulo)}
       <div class="silencio" data-reveal="sube">
@@ -96,7 +98,7 @@
         </svg>
         <img src="img/figura.webp" alt="">
       </div>` : "";
-    agregar("la-obra", "La obra", "#ff856e", `
+    agregar("la-obra", "La obra", "coral", `
       ${kicker("La obra")}
       ${titulo(["De qué", "se trata"])}
       ${s.pendiente && borrador ? '<p class="nota-pendiente" data-reveal="sube">Borrador: falta el texto oficial</p>' : ""}
@@ -115,18 +117,18 @@
         const h = u.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/.*$/, "");
         return `<a class="ig" href="https://www.instagram.com/${esc(h)}/" target="_blank" rel="noopener">@${esc(h)}</a>`;
       };
-      agregar("elenco", "Elenco", "#c89d4c", `
+      agregar("elenco", "Elenco", "oro", `
         ${kicker("En escena")}
         ${titulo(["El", "elenco"])}
         <div class="elenco">${elenco.map((p, i) => `
           <article class="actor${i % 2 ? " der" : ""}" data-reveal="actor">
             <div class="marco"><div class="foto">${p.foto
               ? `<img src="${esc(p.foto)}" alt="${esc(p.nombre)}" loading="lazy" decoding="async">`
-              : `<div class="sin-foto" aria-hidden="true"><span class="ini">${esc(p.personaje[0])}</span><img class="fig" src="img/figura.webp" alt=""></div>`}
+              : `<div class="sin-foto" aria-hidden="true"><span class="ini">${esc(p.personaje[0])}</span><img class="fig" src="img/figura-blanca.webp" alt=""></div>`}
             </div></div>
             <div class="info">
               <span class="n">${String(i + 1).padStart(2, "0")}</span>
-              <h3 class="personaje">${esc(p.personaje)}</h3>
+              <h3 class="personaje"><span>${esc(p.personaje)}</span></h3>
               <div class="nombre">${p.nombre ? esc(p.nombre) : PEND}</div>
               ${ig(p.instagram)}
             </div>
@@ -138,7 +140,7 @@
 
   // Canciones
   if (D.canciones && D.canciones.length) {
-    agregar("canciones", "Canciones", "#009380", `
+    agregar("canciones", "Canciones", "teal", `
       ${kicker("Números musicales")}
       ${titulo(["Las", "canciones"])}
       <ol class="canciones">${D.canciones.map((c, i) => {
@@ -152,7 +154,7 @@
   {
     const ficha = (D.ficha || []).filter((f) => (f.nombres && f.nombres.length) || borrador);
     if (ficha.length) {
-      agregar("equipo", "Equipo", "#34c4aa", `
+      agregar("equipo", "Equipo", "verde", `
         ${kicker("Ficha técnica")}
         ${titulo(["Detrás de", "escena"])}
         <ul class="creditos">${ficha.map((f) => `
@@ -164,7 +166,7 @@
 
   // Palabras
   if (D.palabras && D.palabras.texto) {
-    agregar("palabras", "Palabras", "#ff856e", `
+    agregar("palabras", "Palabras", "coral", `
       ${kicker("Unas palabras")}
       <blockquote class="palabras" data-reveal="sube">${D.palabras.texto.split(/\n\s*\n/).map((p) => `<p>${esc(p)}</p>`).join("")}
         ${D.palabras.firma ? `<footer>${esc(D.palabras.firma)}</footer>` : ""}</blockquote>
@@ -173,7 +175,7 @@
 
   // Fotos
   if (D.galeria && D.galeria.length) {
-    agregar("fotos", "Fotos", "#c89d4c", `
+    agregar("fotos", "Fotos", "oro", `
       ${kicker("Fotos")}
       ${titulo(["Así", "se vive"])}
       <div class="galeria${D.galeria.length === 1 ? " una" : ""}" data-reveal="sube">${D.galeria.map((g, i) => `
@@ -192,7 +194,7 @@
     redes.push(`<button class="boton${D.entradas ? " secundario" : ""}" type="button" data-compartir>${ICONO_COMPARTIR}Compartir el programa</button>`);
     if (D.redes.obra) redes.push(`<a class="boton secundario" href="${esc(D.redes.obra)}" target="_blank" rel="noopener">${ICONO_IG}La obra en Instagram</a>`);
     if (D.redes.productora) redes.push(`<a class="boton secundario" href="${esc(D.redes.productora)}" target="_blank" rel="noopener">${ICONO_IG}Brux en Instagram</a>`);
-    agregar("gracias", "Gracias", "#ff856e", `
+    agregar("gracias", "Gracias", "coral", `
       <div class="centrado">${titulo(D.cierre.titulo)}</div>
       <div class="escenario" data-reveal="escenario"><img src="img/figura.webp" alt=""></div>
       <p class="leyenda" data-reveal="sube">Mamá, cada vez más chiquita.</p>
@@ -209,7 +211,7 @@
     <img class="brux" src="img/brux-blanco.svg" alt="Brux Producciones" width="122" height="54">
     <div>Brux Producciones · Córdoba</div>
     <div><a href="${esc(D.redes.productora)}" target="_blank" rel="noopener">@brux.producciones</a></div>
-    ${D.credito ? `<a class="credito" href="${esc(D.credito.url)}" target="_blank" rel="noopener">${esc(D.credito.texto)}</a>` : ""}
+    ${D.credito ? `<a class="credito" href="${esc(D.credito.url)}" target="_blank" rel="noopener">${esc(D.credito.texto)} · v${VERSION}</a>` : ""}
   `;
 
   // Menú
@@ -230,7 +232,7 @@
       const uno = arr.map((t) => `<span>${esc(t)}</span><b>✦</b>`).join("");
       return `<div class="rodillo">${uno.repeat(6)}</div>`;
     };
-    return `<div class="cintas" aria-hidden="true"><div class="cinta b" data-dir="1">${rollo(b)}</div><div class="cinta a" data-dir="-1">${rollo(a)}</div></div>`;
+    return `<div class="cintas" aria-hidden="true" data-reveal="cintas"><div class="cinta b" data-dir="1">${rollo(b)}</div><div class="cinta a" data-dir="-1">${rollo(a)}</div></div>`;
   }
 
   // ---------- Revelado al entrar en pantalla ----------
@@ -238,10 +240,16 @@
   if (quieto || !("IntersectionObserver" in window)) {
     revelables.forEach((el) => el.classList.add("visto"));
   } else {
+    // lo que entra en pantalla en la misma tanda aparece escalonado, de arriba hacia abajo
     const io = new IntersectionObserver((entradas) => {
-      entradas.forEach((en) => {
-        if (en.isIntersecting) { en.target.classList.add("visto"); io.unobserve(en.target); }
-      });
+      entradas.filter((en) => en.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+        .forEach((en, k) => {
+          const el = en.target;
+          if (k && !el.style.getPropertyValue("--d")) el.style.setProperty("--d", Math.min(k, 6) * 90 + "ms");
+          el.classList.add("visto");
+          io.unobserve(el);
+        });
     }, { rootMargin: "0px 0px -12% 0px", threshold: 0.12 });
     revelables.forEach((el) => io.observe(el));
   }
@@ -261,6 +269,7 @@
   const avance = $("#avance");
   const mini = $("#mini");
   const enlacesMenu = $$("#menuLista a");
+  const luces = $$(".luz");
   let actual = null;
   function activar(id) {
     if (id === actual) return;
@@ -270,7 +279,7 @@
     dockNum.textContent = s.num + " / " + String(secciones.length).padStart(2, "0");
     dockNombre.textContent = s.nombre;
     dockNombre.classList.remove("cambia"); void dockNombre.offsetWidth; dockNombre.classList.add("cambia");
-    document.documentElement.style.setProperty("--foco", s.tono);
+    luces.forEach((l) => l.classList.toggle("on", l.dataset.tono === s.tono));
     enlacesMenu.forEach((a) => a.classList.toggle("actual", a.dataset.ir === id));
   }
   activar(secciones[0].id);
@@ -303,40 +312,47 @@
   });
   cintasEls.forEach((c) => ioCintas.observe(c.el));
 
-  function cuadro() {
+  // Todo se mide en tiempo y no en cuadros: el iPhone en ahorro de batería corre a 30 por segundo
+  // y los ProMotion a 120; así las cintas y la inercia van igual en todos.
+  let ultimoT = 0;
+  function cuadro(t) {
+    const dt = ultimoT ? Math.min(t - ultimoT, 64) : 16.7;
+    ultimoT = t;
+    const f = dt / 16.7;
     const y = window.scrollY;
     const vh = window.innerHeight;
-    velocidad = velocidad * 0.85 + (y - ultimoY) * 0.15;
+    velocidad += ((y - ultimoY) / f - velocidad) * Math.min(1, 0.15 * f);
     ultimoY = y;
 
     // Portada: el título se desarma y la nena se achica
-    const recorrido = pista.offsetHeight - vh;
+    const recorrido = Math.max(1, pista.offsetHeight - vh);
     const p = clamp(y / recorrido);
     if (Math.abs(p - ultimoP) > 0.001) {
       portada.style.setProperty("--p", p.toFixed(4));
+      portada.classList.toggle("moviendo", p > 0 && p < 1);
       ultimoP = p;
     }
     dock.classList.toggle("visible", y > recorrido * 0.9);
 
-    // Progreso total: el anillo se llena y la nena del dock se achica
-    const total = clamp((y - recorrido) / (raiz.scrollHeight - vh - recorrido));
+    // Progreso total: el anillo se llena y la nena de la barra se achica
+    const total = clamp((y - recorrido) / Math.max(1, raiz.scrollHeight - vh - recorrido));
     avance.style.strokeDashoffset = (131.95 * (1 - total)).toFixed(2);
     mini.style.setProperty("--s", (1 - total * 0.62).toFixed(3));
 
-    // Sinopsis: las palabras se encienden a medida que las leés
-    if (!quieto) {
-      const linea = vh * 0.78;
-      parrafos.forEach((pp) => {
-        const r = pp.el.getBoundingClientRect();
-        if (r.bottom < -50 && pp.n === pp.w.length) return;
-        const prog = clamp((linea - r.top) / (r.height + vh * 0.12));
-        const n = Math.round(prog * pp.w.length);
-        if (n !== pp.n) {
-          pp.w.forEach((w, i) => w.classList.toggle("on", i < n));
-          pp.n = n;
-        }
-      });
+    // Sinopsis: las palabras se encienden a medida que las leés (es un fundido: queda también con "Reducir movimiento")
+    const linea = vh * 0.78;
+    parrafos.forEach((pp) => {
+      const r = pp.el.getBoundingClientRect();
+      if ((r.bottom < -50 && pp.n === pp.w.length) || (r.top > vh && pp.n === 0)) return;
+      const prog = clamp((linea - r.top) / (r.height + vh * 0.12));
+      const n = Math.round(prog * pp.w.length);
+      if (n !== pp.n) {
+        pp.w.forEach((w, i) => w.classList.toggle("on", i < n));
+        pp.n = n;
+      }
+    });
 
+    if (!quieto) {
       // Fotos del elenco: leve paralaje
       fotosActor.forEach((im) => {
         const r = im.parentElement.getBoundingClientRect();
@@ -345,26 +361,32 @@
         im.style.setProperty("--py", (k * -8).toFixed(2) + "%");
       });
 
-      // Cintas: avanzan solas y aceleran con el scroll
+      // Cintas: avanzan solas, aceleran con el scroll y se inclinan con el envión
+      const inclina = clamp(-velocidad * 0.25, -6, 6);
       cintasEls.forEach((c) => {
         if (!c.visible || !c.ancho) return;
-        c.x += c.dir * (0.6 + Math.min(Math.abs(velocidad) * 0.35, 9));
+        c.x += c.dir * (0.6 + Math.min(Math.abs(velocidad) * 0.35, 9)) * f;
         if (c.x <= -c.ancho) c.x += c.ancho;
         if (c.x > 0) c.x -= c.ancho;
-        c.r.style.transform = `translate3d(${c.x.toFixed(1)}px,0,0)`;
+        c.r.style.transform = `translate3d(${c.x.toFixed(1)}px,0,0) skewX(${inclina.toFixed(2)}deg)`;
       });
     }
 
-    const siguen = !quieto && (cintasEls.some((c) => c.visible) || Math.abs(velocidad) > 0.2);
-    if (siguen) requestAnimationFrame(cuadro); else corriendo = false;
+    const siguen = (!quieto && cintasEls.some((c) => c.visible)) || Math.abs(velocidad) > 0.2;
+    if (siguen) requestAnimationFrame(cuadro); else { corriendo = false; ultimoT = 0; }
   }
   function arrancar() {
     if (corriendo) return;
     corriendo = true;
+    ultimoT = 0;
     requestAnimationFrame(cuadro);
   }
   addEventListener("scroll", arrancar, { passive: true });
   addEventListener("resize", arrancar);
+  // al volver atrás desde Instagram, Safari restaura la página congelada: reanudar
+  addEventListener("pageshow", (e) => { if (e.persisted) { corriendo = false; arrancar(); } });
+  // sin esto iOS no muestra el :active de los botones al tocarlos
+  document.addEventListener("touchstart", () => {}, { passive: true });
   arrancar();
 
   // ---------- Menú ----------
