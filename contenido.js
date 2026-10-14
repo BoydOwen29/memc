@@ -41,18 +41,18 @@ window.MEMC = {
     dato: "Escrita por los argentinos Ignacio Olivera y Juan Pablo Schapira, se presentó en Argentina, Chile, Perú, Panamá y República Dominicana.",
   },
 
-  // Elenco y banda en el orden del video de presentación. "foco" es la imagen del foquito con esa persona encendida
-  // (img/burbujas/<foco>.webp). Las biografías salen del video; el "rol" de la banda se dedujo de cada biografía.
+  // Elenco y banda en el orden del video de presentación. "foco" es el id de la persona en las imágenes del escenario
+  // (img/escena/foco-<foco>.webp, recorte-<foco>.webp y cara-<foco>.webp). Las biografías salen del video; el "rol" de la banda se dedujo de cada biografía.
   elenco: [
-    { personaje: "Diego", nombre: "Bruno Maretto", foco: "diego", foto: "img/elenco/diego.webp",
+    { personaje: "Diego", nombre: "Bruno Maretto", foco: "diego",
       bio: "Es actor, director y profesor teatral. Comenzó su formación a los 10 años, principalmente en el CCI María Castaña. Actualmente es profesor de Teatro por la Universidad Nacional de Córdoba y se encuentra en el tramo final de la Licenciatura. Trabajó con Pepe Cibrián Campoy en Dorothy y recorrió escenarios como el Teatro Real, la Sala de las Américas, la Ciudad de las Artes, el Teatro Comedia y el Teatro Verdi. Participó en más de 40 obras del circuito teatral cordobés." },
-    { personaje: "Rita", nombre: "Gioia Falco", foco: "rita", foto: "img/elenco/rita.webp",
+    { personaje: "Rita", nombre: "Gioia Falco", foco: "rita",
       bio: "Técnica Productora en Medios Audiovisuales (UNC) y Técnica Instrumentista Musical en Canto Lírico (UPC), de registro mezzosoprano. Cuenta con una destacada trayectoria como actriz y cantante lírica. Protagonizó Dorothy, un mágico musical, y participó en Drácula, ambas producciones de Pepe Cibrián Campoy. También compartió escenario con Víctor Laplace en La pasión de Don Juan. Desde 2004 integra el Coro Polifónico de la Provincia de Córdoba, participando en numerosas óperas y producciones sinfónico-corales, también como solista." },
-    { personaje: "Clara", nombre: "Loreley de Barberín", foco: "clara", foto: "img/elenco/clara.webp",
+    { personaje: "Clara", nombre: "Loreley de Barberín", foco: "clara",
       bio: "Es intérprete de teatro musical. Entre sus trabajos más destacados están el protagónico de Wendy, la aventura de crecer, con presentaciones en Córdoba y distintas localidades de la provincia, y su participación en el ensamble de bailarines de El principio del fin, que llegó al Quality de Córdoba y al Teatro Broadway de Buenos Aires. También formó parte de Camino Amarillo, una producción teatral infantil en Catamarca. Continúa sumando experiencias en el teatro musical, formando parte de nuevas propuestas escénicas." },
-    { personaje: "Germán", nombre: "Joel Aguirre", foco: "german", foto: "img/elenco/german.webp",
+    { personaje: "Germán", nombre: "Joel Aguirre", foco: "german",
       bio: "Es profesor de teatro e intérprete vocal y actoral, con formación en actuación frente a cámara. Participó en obras como Mamá está más chiquita, El principito, Las D'enfrente, Saverio el Cruel, High School Musical y El Club de las Bataclanas, entre otras. Musicalmente trabajó como solista vocal y en distintas bandas, en carnavales, bares, festivales y cumpleaños. En 2022 participó en la Performer Cup Argentina P.A.S.S., el campeonato argentino de artes escénicas, donde ganó las nacionales en las categorías \"artista completo\" e \"intérprete vocal\"." },
-    { personaje: "Alicia", nombre: "Sonia Daniel", foco: "alicia", foto: "img/elenco/alicia.webp",
+    { personaje: "Alicia", nombre: "Sonia Daniel", foco: "alicia",
       bio: "Actriz, dramaturga, directora, docente y gestora cultural, con más de 40 años de trayectoria en el teatro. En 1995 fundó, junto a Leo Rey, el Centro Cultural Independiente María Castaña, espacio emblemático del teatro cordobés que continúa dirigiendo. Sus obras se estrenaron y publicaron en Argentina, Latinoamérica y Europa, y recibió numerosos premios y reconocimientos, entre ellos el Jerónimo de la Gente. Desde 1990 se dedica también a la formación teatral y es impulsora y directora del Festival Regional de Teatro Adolescente Vamos que Venimos – Córdoba." },
   ],
   elencoIntro: "¿Conocés quiénes están en escena?",

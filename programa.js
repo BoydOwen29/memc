@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.6";
+  const VERSION = "1.7";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -68,34 +68,13 @@
     `, cintas("a"));
   }
 
-  // 03 · Elenco
-  {
-    const elenco = (D.elenco || []).filter((p) => p.nombre || borrador);
-    if (elenco.length) {
-      const ig = (u) => {
-        if (!u) return "";
-        const h = u.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/.*$/, "");
-        return `<a class="ig" href="https://www.instagram.com/${esc(h)}/" target="_blank" rel="noopener">@${esc(h)}</a>`;
-      };
-      agregar("elenco", "Elenco", "oro", `
-        ${kicker("En escena")}
-        ${titulo(["El", "elenco"])}
-        <div class="elenco">${elenco.map((p, i) => `
-          <article class="actor${i % 2 ? " der" : ""}" data-reveal="actor">
-            <div class="marco"><div class="foto">${p.foto
-              ? `<img src="${esc(p.foto)}" alt="${esc(p.nombre ? p.nombre + " como " + p.personaje : p.personaje)}" loading="lazy" decoding="async">`
-              : `<div class="sin-foto" aria-hidden="true"><span class="ini">${esc(p.personaje[0])}</span><img class="fig" src="img/figura-blanca.webp" alt=""></div>`}
-            </div></div>
-            <div class="info">
-              <span class="n">${String(i + 1).padStart(2, "0")}</span>
-              <h3 class="personaje"><span>${esc(p.personaje)}</span></h3>
-              <div class="nombre">${p.nombre ? esc(p.nombre) : PEND}</div>
-              ${ig(p.instagram)}
-            </div>
-          </article>`).join("")}
-        </div>
-      `);
-    }
+  // 03 · Elenco y banda: un escenario de una pantalla (ver "Escenario" más abajo)
+  if ((D.elenco && D.elenco.length) || (D.banda && D.banda.length)) {
+    agregar("elenco", "Elenco", "oro", `
+      ${kicker("En escena")}
+      ${titulo(["El", "elenco"])}
+      <div class="e-escenario" id="escenario"></div>
+    `);
   }
 
   // Canciones
@@ -235,6 +214,127 @@
     return `<div class="cintas" aria-hidden="true" data-reveal="cintas"><div class="cinta b" data-dir="1">${rollo(b)}</div><div class="cinta a" data-dir="-1">${rollo(a)}</div></div>`;
   }
 
+  // ---------- Escenario del elenco y la banda ----------
+  // Todo pasa en el mismo lugar: la cámara entra en el foco hasta cada personaje y el actor sale adelante, grande,
+  // tapando la escena. Va solo mientras está en pantalla (en el orden del video); se frena apenas alguien toca.
+  (function escenario() {
+    const raiz = $("#escenario");
+    if (!raiz) return;
+    const E = "img/escena/";
+    const T = 5200; // tiempo por persona
+    // centro de cada cara dentro del foco (fracción del ancho y del alto de la imagen)
+    const CARAS = { german: [0.7807, 0.3672], rita: [0.5004, 0.3786], diego: [0.3202, 0.3902], clara: [0.6663, 0.4236], alicia: [0.1547, 0.4063],
+      matias: [0.4486, 0.5054], pablo: [0.3457, 0.3375], fran: [0.4825, 0.3206], tobias: [0.5957, 0.5371], gonzalo: [0.624, 0.3048] };
+    const GRUPOS = {
+      elenco: { gente: (D.elenco || []).map((p) => ({ ...p, id: p.foco, papel: p.personaje })), portada: true, intro: D.elencoIntro || "", recorte: true },
+      banda: { gente: (D.banda || []).map((p) => ({ ...p, id: p.foco, papel: p.rol })), portada: false, intro: D.bandaIntro || "", recorte: false },
+    };
+    let grupo = GRUPOS.elenco.gente.length ? "elenco" : "banda";
+    let reloj = null, auto = true, actual = null, visible = false, iniciado = false;
+    let ps = [], ir = () => {}, W = 0, H = 0;
+    const pasos = (g) => [...(g.portada ? [{ tipo: "portada" }] : []), { tipo: "pregunta" }, ...g.gente.map((p, k) => ({ tipo: "persona", p, k }))];
+    function textoHTML(paso, g) {
+      if (paso.tipo === "portada") return "";
+      if (paso.tipo === "pregunta") return `<p class="e-pregunta">${esc(g.intro)}</p><p class="e-pista">Tocá una cara o deslizá</p>`;
+      const p = paso.p;
+      return `<p class="e-papel">${esc(p.papel)}</p><h3 class="e-pill${paso.k % 2 ? " par" : ""}">${esc(p.nombre)}</h3>` +
+        (p.bio ? `<p class="e-bio">${esc(p.bio)}</p><button class="e-leer" type="button">Leer más</button>` : "");
+    }
+    function detener() { auto = false; clearTimeout(reloj); $$(".e-cara", raiz).forEach((c) => c.classList.remove("corre")); }
+    function programar(i) {
+      const caras = $$(".e-cara", raiz);
+      caras.forEach((c) => { c.classList.toggle("activa", !!ps[i].p && c.dataset.id === ps[i].p.id); c.classList.remove("corre"); });
+      clearTimeout(reloj);
+      if (!auto || !visible) return;
+      const c = ps[i].p && caras.find((x) => x.dataset.id === ps[i].p.id);
+      if (c && !quieto) { void c.offsetWidth; c.classList.add("corre"); }
+      const sig = i + 1 < ps.length ? i + 1 : ps.findIndex((x) => x.p);
+      reloj = setTimeout(() => ir(sig), ps[i].p ? T : 2400);
+    }
+    function montar() {
+      const g = GRUPOS[grupo];
+      ps = pasos(g); actual = null; clearTimeout(reloj);
+      const hay = (k) => GRUPOS[k].gente.length;
+      raiz.style.setProperty("--t", T + "ms");
+      raiz.innerHTML = `${hay("elenco") && hay("banda") ? `<div class="e-seg">
+          <button type="button" data-g="elenco" aria-pressed="${grupo === "elenco"}">Elenco</button>
+          <button type="button" data-g="banda" aria-pressed="${grupo === "banda"}">Banda</button></div>` : ""}
+        <div class="e-cuadro">
+          <div class="e-camara">
+            <img class="e-capa on" data-k="vacia" src="${E}foco-${grupo}-vacia.webp" alt="" decoding="async">
+            ${g.portada ? `<img class="e-capa" data-k="portada" src="${E}foco-portada.webp" alt="Mamá está más chiquita" decoding="async">` : ""}
+            ${g.gente.map((p) => `<img class="e-capa" data-k="${esc(p.id)}" src="${E}foco-${esc(p.id)}.webp" alt="" loading="lazy" decoding="async">`).join("")}
+            ${g.gente.map((p) => { const c = CARAS[p.id] || [0.5, 0.5]; return `<button class="e-toque" type="button" data-id="${esc(p.id)}" style="left:${(c[0] * 100).toFixed(2)}%;top:${(c[1] * 100).toFixed(2)}%" aria-label="Conocer a ${esc(p.nombre)}"></button>`; }).join("")}
+          </div>
+          <div class="e-sombra"></div>
+          ${g.recorte ? g.gente.map((p) => `<img class="e-recorte" data-k="${esc(p.id)}" src="${E}recorte-${esc(p.id)}.webp" alt="${esc(p.nombre)}" loading="lazy" decoding="async">`).join("") : ""}
+          <div class="e-velo"></div>
+          <div class="e-texto" aria-live="polite"></div>
+        </div>
+        <div class="e-caras">${g.gente.map((p) => `<button class="e-cara" type="button" data-id="${esc(p.id)}" aria-label="${esc(p.nombre)}"><img src="${E}cara-${esc(p.id)}.webp" alt="" loading="lazy" decoding="async"><svg class="aro" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" pathLength="100"/></svg></button>`).join("")}</div>`;
+      const cuadro = $(".e-cuadro", raiz), cam = $(".e-camara", raiz), texto = $(".e-texto", raiz);
+      const medir = () => { W = cuadro.clientWidth; H = cuadro.clientHeight; cam.style.width = cam.style.height = W + "px"; };
+      medir();
+      function encuadre(paso) {
+        if (!paso.p) { // vista general: el foco entero arriba
+          const s = Math.min(1, (H * 0.66) / W);
+          return `translate(${((W - W * s) / 2).toFixed(1)}px, ${(H * 0.04).toFixed(1)}px) scale(${s.toFixed(3)})`;
+        }
+        const c = CARAS[paso.p.id] || [0.5, 0.5], s = g.recorte ? 2.3 : 2.7, fy = g.recorte ? 0.3 : 0.34;
+        return `translate(${(W * 0.5 - c[0] * W * s).toFixed(1)}px, ${(H * fy - c[1] * W * s).toFixed(1)}px) scale(${s})`;
+      }
+      function ponerTexto(paso, demora) {
+        texto.classList.add("sale"); texto.classList.remove("entra", "abierto");
+        setTimeout(() => {
+          texto.innerHTML = textoHTML(paso, g);
+          texto.classList.remove("sale"); void texto.offsetWidth; texto.classList.add("entra");
+          const l = $(".e-leer", texto);
+          if (l) l.addEventListener("click", () => { texto.classList.toggle("abierto"); l.textContent = texto.classList.contains("abierto") ? "Leer menos" : "Leer más"; detener(); });
+        }, demora);
+      }
+      ir = (i) => {
+        actual = i; const paso = ps[i];
+        const k = paso.tipo === "portada" ? "portada" : paso.p ? paso.p.id : "vacia";
+        $$(".e-recorte", raiz).forEach((r) => r.classList.remove("on"));
+        cuadro.classList.remove("con-recorte");
+        cam.style.transform = encuadre(paso);
+        $$(".e-capa", cam).forEach((c) => c.classList.toggle("on", c.dataset.k === k));
+        if (paso.p && g.recorte) setTimeout(() => {
+          if (actual !== i) return;
+          cuadro.classList.add("con-recorte");
+          const r = $(`.e-recorte[data-k="${paso.p.id}"]`, raiz); if (r) r.classList.add("on");
+        }, quieto ? 0 : 620);
+        ponerTexto(paso, quieto ? 0 : paso.p ? 700 : 300);
+        programar(i);
+      };
+      const aPersona = (id) => { detener(); ir(ps.findIndex((x) => x.p && x.p.id === id)); };
+      $$(".e-cara, .e-toque", raiz).forEach((b) => b.addEventListener("click", () => aPersona(b.dataset.id)));
+      $$(".e-seg button", raiz).forEach((b) => b.addEventListener("click", () => { if (b.dataset.g !== grupo) { grupo = b.dataset.g; montar(); } }));
+      // deslizar de costado para pasar de personaje
+      let x0 = null, y0 = 0;
+      cuadro.addEventListener("pointerdown", (e) => { x0 = e.clientX; y0 = e.clientY; });
+      cuadro.addEventListener("pointercancel", () => { x0 = null; });
+      cuadro.addEventListener("pointerup", (e) => {
+        if (x0 === null) return; const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { detener(); ir(Math.min(ps.length - 1, Math.max(0, (actual ?? 0) + (dx < 0 ? 1 : -1)))); }
+      });
+      addEventListener("resize", () => { medir(); if (actual !== null) cam.style.transform = encuadre(ps[actual]); });
+      cam.style.transition = "none"; cam.style.transform = encuadre(ps[0]); void cam.offsetWidth; cam.style.transition = "";
+      ir(0);
+    }
+    montar();
+    // va solo mientras se ve; si sale de pantalla, se pausa
+    new IntersectionObserver(([en]) => {
+      visible = en.isIntersecting;
+      // con el escenario en pantalla, la barra de abajo se corre: no tapa las caras
+      document.documentElement.classList.toggle("en-escena", visible);
+      if (visible && auto && actual !== null) {
+        // la primera vez arranca desde el principio, para que se vea la entrada
+        if (!iniciado) { iniciado = true; ir(0); } else programar(actual);
+      } else clearTimeout(reloj);
+    }, { threshold: 0.5 }).observe(raiz);
+  })();
+
   // ---------- Revelado al entrar en pantalla ----------
   const revelables = $$("[data-reveal]");
   if (quieto || !("IntersectionObserver" in window)) {
@@ -292,7 +392,7 @@
   const raiz = document.documentElement;
   const portada = $("#portada");
   const parrafos = $$(".lectura p").map((p) => ({ el: p, w: $$(".w", p), n: -1 }));
-  const fotosActor = $$(".actor .foto img, .foto-obra img");
+  const fotosActor = $$(".foto-obra img");
   const cintasEls = $$(".cinta").map((c) => ({ el: c, r: $(".rodillo", c), dir: +c.dataset.dir, x: 0, ancho: 0, visible: false }));
   let ultimoY = window.scrollY;
   let velocidad = 0;
