@@ -22,9 +22,10 @@ window.MEMC = {
 
   entradas: "", // link de venta de entradas
 
+  // Va al final del programa, justo antes del "Gracias": cuando ya leyeron todo y la función está por empezar.
   bienvenida: {
-    titulo: ["Bienvenidos", "a la función"],
-    aviso: "Poné el celu en silencio y bajale el brillo. El programa te espera acá para cuando termine.",
+    titulo: ["Está por", "empezar"],
+    aviso: "Ahora sí: poné el celu en silencio y bajale el brillo. Cuando termine la función, el programa te espera acá.",
   },
 
   sinopsis: {

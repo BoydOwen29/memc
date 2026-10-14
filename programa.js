@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.3";
+  const VERSION = "1.4";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -44,47 +44,6 @@
   const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   const hoy = (() => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); })();
 
-  // 01 · Esta noche
-  {
-    const funciones = (D.funciones || []).slice().sort((a, b) => a.fecha.localeCompare(b.fecha));
-    let fechas = "";
-    if (funciones.length) {
-      fechas = `<h3 class="subtitulo" data-reveal="sube">Funciones</h3><div class="funciones">` + funciones.map((f, i) => {
-        const d = new Date(f.fecha + "T12:00:00");
-        const estado = f.fecha === hoy ? "hoy" : f.fecha < hoy ? "pasada" : "";
-        const sala = [f.sala, f.direccion].filter(Boolean).map(esc).join(" · ");
-        const mapa = f.mapa ? ` · <a href="${esc(f.mapa)}" target="_blank" rel="noopener">Cómo llegar</a>` : "";
-        return `<div class="funcion ${estado}" data-reveal="sube" style="--d:${i * 70}ms">
-          <div class="dia"><b>${d.getDate()}</b><span>${MESES[d.getMonth()]}</span></div>
-          <div class="cuando">${DIAS[d.getDay()]} · ${esc(f.hora)} h${estado === "hoy" ? '<span class="chip-hoy">HOY</span>' : ""}</div>
-          <div class="donde">${sala || PEND}${mapa}</div>
-        </div>`;
-      }).join("") + "</div>";
-    } else if (D.funcionesTexto) {
-      fechas = `<h3 class="subtitulo" data-reveal="sube">Funciones</h3><p class="fechas-texto" data-reveal="sube">${esc(D.funcionesTexto)}</p>`;
-    }
-    const botones = [];
-    if (D.entradas) botones.push(`<a class="boton" href="${esc(D.entradas)}" target="_blank" rel="noopener">Entradas</a>`);
-    botones.push(`<button class="boton secundario" type="button" data-compartir>${ICONO_COMPARTIR}Compartir el programa</button>`);
-    agregar("esta-noche", "Esta noche", "teal", `
-      ${kicker("Esta noche")}
-      ${titulo(D.bienvenida.titulo)}
-      <div class="silencio" data-reveal="sube">
-        <span class="cel" aria-hidden="true">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M11 18.2h2"/>
-            <path class="onda" d="M19.5 8.5c1 1 1 6 0 7M21.8 6.5c2 2.4 2 8.6 0 11"/>
-            <path class="onda" d="M4.5 8.5c-1 1-1 6 0 7M2.2 6.5c-2 2.4-2 8.6 0 11"/>
-            <path class="tachado" d="M3 3l18 18"/>
-          </svg>
-        </span>
-        <p>${esc(D.bienvenida.aviso)}</p>
-      </div>
-      ${fechas}
-      <div class="botones" data-reveal="sube">${botones.join("")}</div>
-    `, cintas("a"));
-  }
-
   // 02 · La obra
   if (D.sinopsis && D.sinopsis.parrafos.length) {
     const s = D.sinopsis;
@@ -106,7 +65,7 @@
       ${s.foto ? `<figure class="foto-obra" data-reveal="telon"><img src="${esc(s.foto.chica || s.foto.src)}" srcset="${esc(s.foto.chica || s.foto.src)} 800w, ${esc(s.foto.src)} 1600w" sizes="(min-width: 700px) 600px, 100vw" alt="${esc(s.foto.alt)}" loading="lazy" decoding="async"></figure>` : ""}
       ${(sello || s.dato) ? `<div class="premio">${sello}${s.dato ? `<p data-reveal="sube" style="--d:200ms">${esc(s.dato)}</p>` : ""}</div>` : ""}
       ${D.obra.duracion ? `<p class="duracion" data-reveal="sube">Duración: ${esc(D.obra.duracion)}</p>` : ""}
-    `);
+    `, cintas("a"));
   }
 
   // 03 · Elenco
@@ -185,6 +144,46 @@
         </button>`).join("")}
       </div>
       ${D.galeria.length > 1 ? '<p class="galeria-pista">Deslizá para ver más · tocá para ampliar</p>' : ""}
+    `);
+  }
+
+  // Esta noche: el aviso del celular va al final, cuando ya leyeron todo y la función está por empezar
+  {
+    const funciones = (D.funciones || []).slice().sort((a, b) => a.fecha.localeCompare(b.fecha));
+    let fechas = "";
+    if (funciones.length) {
+      fechas = `<h3 class="subtitulo" data-reveal="sube">Funciones</h3><div class="funciones">` + funciones.map((f, i) => {
+        const d = new Date(f.fecha + "T12:00:00");
+        const estado = f.fecha === hoy ? "hoy" : f.fecha < hoy ? "pasada" : "";
+        const sala = [f.sala, f.direccion].filter(Boolean).map(esc).join(" · ");
+        const mapa = f.mapa ? ` · <a href="${esc(f.mapa)}" target="_blank" rel="noopener">Cómo llegar</a>` : "";
+        return `<div class="funcion ${estado}" data-reveal="sube" style="--d:${i * 70}ms">
+          <div class="dia"><b>${d.getDate()}</b><span>${MESES[d.getMonth()]}</span></div>
+          <div class="cuando">${DIAS[d.getDay()]} · ${esc(f.hora)} h${estado === "hoy" ? '<span class="chip-hoy">HOY</span>' : ""}</div>
+          <div class="donde">${sala || PEND}${mapa}</div>
+        </div>`;
+      }).join("") + "</div>";
+    } else if (D.funcionesTexto) {
+      fechas = `<h3 class="subtitulo" data-reveal="sube">Funciones</h3><p class="fechas-texto" data-reveal="sube">${esc(D.funcionesTexto)}</p>`;
+    }
+    const botones = [];
+    if (D.entradas) botones.push(`<a class="boton" href="${esc(D.entradas)}" target="_blank" rel="noopener">Entradas</a>`);
+    agregar("esta-noche", "Esta noche", "teal", `
+      ${kicker("Esta noche")}
+      ${titulo(D.bienvenida.titulo)}
+      <div class="silencio" data-reveal="sube">
+        <span class="cel" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M11 18.2h2"/>
+            <path class="onda" d="M19.5 8.5c1 1 1 6 0 7M21.8 6.5c2 2.4 2 8.6 0 11"/>
+            <path class="onda" d="M4.5 8.5c-1 1-1 6 0 7M2.2 6.5c-2 2.4-2 8.6 0 11"/>
+            <path class="tachado" d="M3 3l18 18"/>
+          </svg>
+        </span>
+        <p>${esc(D.bienvenida.aviso)}</p>
+      </div>
+      ${fechas}
+      ${botones.length ? `<div class="botones" data-reveal="sube">${botones.join("")}</div>` : ""}
     `);
   }
 
