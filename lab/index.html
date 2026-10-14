@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Laboratorio · Presentación del elenco</title>
+<meta name="theme-color" content="#0d1310">
+<link rel="stylesheet" href="../fuentes/fuentes.css">
+<link rel="stylesheet" href="../estilos.css">
+<style>
+  /* ---------- Laboratorio: barra de opciones ---------- */
+  .lab-barra {
+    position: sticky; top: 0; z-index: 30; padding: calc(10px + env(safe-area-inset-top)) var(--gutter) 10px;
+    background: rgba(13, 19, 16, .96); border-bottom: 1px solid var(--linea);
+  }
+  .lab-barra p { margin: 0 0 8px; font: 600 12px/1 var(--display); letter-spacing: .24em; text-transform: uppercase; color: var(--tenue); }
+  .lab-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  .lab-tabs::-webkit-scrollbar { display: none; }
+  .lab-tabs button {
+    flex: none; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--linea); background: transparent; cursor: pointer;
+    font: 700 14px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--tenue);
+  }
+  .lab-tabs button[aria-selected="true"] { background: var(--coral); border-color: var(--coral); color: var(--fondo); }
+  .opcion { display: none; }
+  .opcion.activa { display: block; }
+  .lab-nota {
+    margin: 22px var(--gutter) 0; padding: 12px 14px; border-radius: 12px; border: 1px dashed #8a7434;
+    color: var(--pendiente); font-size: 14px; line-height: 1.45; max-width: 600px;
+  }
+  .grupo { max-width: 600px; margin: 0 auto; padding: 40px var(--gutter) 30px; }
+  .grupo h2 {
+    margin: 0 0 22px; font: italic 800 clamp(46px, 14vw, 72px)/.86 var(--display); text-transform: uppercase; rotate: -8deg; transform-origin: left bottom;
+  }
+  .grupo h2 span { color: var(--coral); }
+
+  /* ---------- La burbuja grande (común) ---------- */
+  .burbuja {
+    position: relative; width: min(100%, 520px); aspect-ratio: 1; margin: 0 auto;
+    animation: flotar-burbuja 7s ease-in-out infinite;
+    touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  }
+  @keyframes flotar-burbuja { 50% { transform: translateY(-7px) scale(1.012); } }
+  .burbuja .capa {
+    position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .9s ease;
+    -webkit-mask-image: radial-gradient(closest-side, #000 93%, transparent 100%);
+    mask-image: radial-gradient(closest-side, #000 93%, transparent 100%);
+    pointer-events: none;
+  }
+  .burbuja .capa.on { opacity: 1; }
+  .burbuja .brillo { position: absolute; inset: 4%; border-radius: 50%; overflow: hidden; pointer-events: none; }
+  .burbuja .brillo::before {
+    content: ""; position: absolute; top: -10%; bottom: -10%; left: -60%; width: 50%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .16) 45%, rgba(255, 255, 255, .03) 60%, transparent);
+    transform: translateX(-60%) skewX(-12deg); opacity: 0;
+  }
+  .burbuja.barrer .brillo::before { animation: barrido 1s ease-out; }
+  @keyframes barrido { 0% { transform: translateX(-60%) skewX(-12deg); opacity: 1; } 100% { transform: translateX(380%) skewX(-12deg); opacity: 0; } }
+
+  /* miniburbujas (caras) */
+  .mini {
+    position: relative; width: 58px; height: 58px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; flex: none;
+    background: var(--superficie-2); touch-action: manipulation;
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .28), 0 8px 18px rgba(0, 0, 0, .45);
+  }
+  .mini img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .mini::after {
+    content: ""; position: absolute; left: 18%; top: 10%; width: 32%; height: 20%; border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(255, 255, 255, .55), transparent); rotate: -30deg; pointer-events: none;
+  }
+  .mini::before {
+    content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle at 70% 75%, transparent 55%, rgba(120, 255, 220, .22) 72%, transparent 76%);
+  }
+
+  /* ficha */
+  .ficha { margin-top: 22px; min-height: 210px; }
+  .ficha .rol { font: 600 13px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--coral); }
+  .ficha h3 { margin: 8px 0 12px; font: 800 clamp(30px, 9vw, 40px)/1 var(--display); text-transform: uppercase; letter-spacing: .01em; }
+  .ficha .bio { margin: 0; color: #cfd8d2; font-size: 15.5px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .ficha.abierta .bio { -webkit-line-clamp: unset; display: block; }
+  .ficha .leer { margin-top: 8px; padding: 6px 0; border: 0; background: none; color: var(--teal-claro); font: 600 14px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; cursor: pointer; }
+  .ficha.entra > * { animation: entra-ficha .6s var(--curva) both; }
+  .ficha.entra > :nth-child(2) { animation-delay: .06s; }
+  .ficha.entra > :nth-child(3) { animation-delay: .12s; }
+  @keyframes entra-ficha { from { opacity: 0; transform: translateY(12px); } }
+  .ficha .vacia-txt { color: var(--tenue); font-size: 15px; }
+  @media (prefers-reduced-motion: reduce) { .ficha.panel.entra { animation: none; } }
+
+  /* panel y píldora: los colores del video (verde y tostado, alternados) */
+  .ficha.panel {
+    --panel: #dca56c; --pill: #2bd394;
+    position: relative; margin-top: 34px; padding: 34px 20px 22px 22px; border-radius: 26px 26px 26px 60px;
+    background: var(--panel); color: #1d2b25;
+    -webkit-clip-path: circle(150% at 100% 0%); clip-path: circle(150% at 100% 0%);
+  }
+  .ficha.panel.par { --panel: #2bd394; --pill: #dca56c; }
+  .ficha.panel.entra { animation: barrer-panel .75s cubic-bezier(.6, 0, .2, 1) both; }
+  .ficha.panel.entra > * { animation-delay: .25s; }
+  @keyframes barrer-panel { from { -webkit-clip-path: circle(0% at 100% 0%); clip-path: circle(0% at 100% 0%); } }
+  .ficha .pill {
+    position: absolute; left: 14px; top: -24px; padding: 11px 20px 9px; border-radius: 999px; background: var(--pill);
+    font: 800 clamp(24px, 7.4vw, 32px)/1 var(--display); text-transform: uppercase; letter-spacing: .02em; color: #1d2b25;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, .3); max-width: calc(100% - 28px);
+  }
+  .ficha.panel .rol { color: #0d4a3a; margin-top: 6px; }
+  .ficha.panel .bio { color: #1d2b25; margin-top: 10px; font-weight: 500; }
+  .ficha.panel .leer { color: #0d4a3a; }
+  .ficha .pregunta { margin: 6px 0 0; font: 800 clamp(28px, 8.4vw, 38px)/1.02 var(--display); text-transform: uppercase; color: #dca56c; }
+
+  /* ---------- A · La luz va pasando ---------- */
+  .selector { display: flex; justify-content: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .selector .mini { width: 54px; height: 54px; }
+  .selector .mini .aro { position: absolute; inset: -5px; width: calc(100% + 10px); height: calc(100% + 10px); rotate: -90deg; pointer-events: none; }
+  .selector .mini .aro circle { fill: none; stroke: var(--coral); stroke-width: 2.4; stroke-dasharray: 100; stroke-dashoffset: 100; stroke-linecap: round; }
+  .selector .mini.activa { box-shadow: inset 0 0 0 2px var(--coral), 0 8px 18px rgba(0, 0, 0, .45); }
+  .selector .mini.activa.corre .aro circle { animation: aro var(--t, 4.5s) linear forwards; }
+  @keyframes aro { to { stroke-dashoffset: 0; } }
+  .selector .mini.activa img { scale: 1.06; }
+  .selector .mini img { transition: scale .4s var(--curva); }
+
+  /* ---------- B · Burbujas que flotan ---------- */
+  .campo { position: relative; }
+  .campo .flota { position: absolute; z-index: 2; width: 64px; height: 64px; margin: -32px; animation: flotar 6s ease-in-out infinite; }
+  .campo .flota .mini { width: 100%; height: 100%; transition: opacity .4s ease, scale .4s var(--curva); }
+  .campo .flota.vista .mini { opacity: .55; scale: .85; }
+  .campo .flota.elegida .mini { opacity: 0; scale: .2; }
+  @keyframes flotar { 25% { transform: translate(5px, -9px); } 50% { transform: translate(-3px, -14px); } 75% { transform: translate(-6px, -5px); } }
+  .viaje { position: fixed; z-index: 40; border-radius: 50%; overflow: hidden; pointer-events: none; transition: all .7s cubic-bezier(.5, 0, .2, 1); }
+  .viaje img { width: 100%; height: 100%; object-fit: cover; }
+  .estallido { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+  .estallido i {
+    position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px; border-radius: 50%;
+    background: rgba(180, 255, 235, .9); opacity: 0;
+  }
+  .estallido .anillo-pop {
+    position: absolute; inset: 6%; border-radius: 50%; border: 2px solid rgba(190, 255, 235, .7); opacity: 0;
+  }
+  .estallido.pop i { animation: gota-pop .8s var(--curva) both; }
+  .estallido.pop .anillo-pop { animation: anillo-pop .7s ease-out both; }
+  @keyframes gota-pop { 0% { opacity: 1; transform: translate(0, 0) scale(1); } 100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(.3); } }
+  @keyframes anillo-pop { 0% { opacity: .9; transform: scale(.85); } 100% { opacity: 0; transform: scale(1.15); } }
+  .pista-toque {
+    position: absolute; left: 50%; bottom: 8%; translate: -50% 0; z-index: 2; padding: 8px 14px; border-radius: 999px;
+    background: rgba(13, 19, 16, .8); font: 600 13px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--arena);
+    animation: latido 1.8s ease-in-out infinite; pointer-events: none; transition: opacity .4s ease;
+  }
+  .pista-toque.fuera { opacity: 0; animation: none; }
+
+  /* ---------- C · Con el dedo ---------- */
+  .relato { position: relative; }
+  .relato .fijo {
+    position: sticky; top: 64px; height: calc(100vh - 64px); height: calc(100svh - 64px);
+    display: flex; flex-direction: column; justify-content: center; padding: 0 var(--gutter) 70px; max-width: 600px; margin: 0 auto;
+  }
+  .relato .burbuja { width: min(100%, 38svh); animation: none; }
+  .relato .ficha { min-height: 0; margin-top: 14px; }
+  .relato .ficha .bio { -webkit-line-clamp: 4; }
+  .relato .ficha.panel { margin-top: 30px; padding-top: 30px; }
+  .relato .puntos { display: flex; justify-content: center; gap: 7px; margin-top: 12px; }
+  .relato .puntos i { width: 7px; height: 7px; border-radius: 50%; background: var(--linea); transition: background .3s ease, scale .3s ease; }
+  .relato .puntos i.on { background: var(--coral); scale: 1.3; }
+  .relato .encabezado { font: 600 13px/1 var(--display); letter-spacing: .24em; text-transform: uppercase; color: var(--arena); margin-bottom: 10px; text-align: center; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .burbuja, .campo .flota { animation: none; }
+    .burbuja.barrer .brillo::before { animation: none; }
+    .viaje { transition: opacity .3s ease; }
+  }
+</style>
+</head>
+<body>
+<div class="grano" aria-hidden="true"></div>
+
+<div class="lab-barra">
+  <p>Laboratorio · presentación del elenco y la banda</p>
+  <div class="lab-tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-op="a">A · La luz pasa</button>
+    <button role="tab" aria-selected="false" data-op="b">B · Flotan</button>
+    <button role="tab" aria-selected="false" data-op="c">C · Con el dedo</button>
+  </div>
+</div>
+
+<section class="opcion activa" id="op-a">
+  <p class="lab-nota">A · Sigue el video: título, "¿Conocés quiénes están en escena?" y la burbuja va mutando sola a cada uno, con su nombre en la píldora y la bio en el panel de color. Tocá una cara para ir directo o deslizá la burbuja.</p>
+  <div id="a-elenco"></div>
+  <div id="a-banda"></div>
+</section>
+
+<section class="opcion" id="op-b">
+  <p class="lab-nota">B · Mismo orden y estética, pero lo maneja quien mira: las caras flotan en burbujitas; al tocar una vuela, entra en la grande y la burbuja muta a esa persona. Más juego.</p>
+  <div id="b-elenco"></div>
+  <div id="b-banda"></div>
+</section>
+
+<section class="opcion" id="op-c">
+  <p class="lab-nota">C · El video llevado al scroll: la burbuja queda quieta y cada vez que bajás muta al siguiente, en el mismo orden. Lo más fiel al video, pero la pantalla queda fija un rato (como la portada vieja).</p>
+  <div id="c-elenco"></div>
+  <div id="c-banda"></div>
+  <div style="height:40vh"></div>
+</section>
+
+
+<script src="personas.js"></script>
+<script>
+(function () {
+  const P = window.PERSONAS;
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const img = (id) => `../img/burbujas/${id}.webp`;
+  const cara = (id) => `../img/burbujas/cara-${id}.webp`;
+
+  const burbujaHTML = (g) => `<div class="burbuja">
+      ${g.portada ? `<img class="capa" data-id="portada" src="${esc(g.portada)}" alt="Mamá está más chiquita">` : ""}
+      <img class="capa on" data-id="" src="${esc(g.vacia)}" alt="">
+      ${g.gente.map((p) => `<img class="capa" data-id="${p.id}" src="${img(p.id)}" alt="${esc(p.nombre)} como ${esc(p.personaje)}" loading="lazy" decoding="async">`).join("")}
+      <span class="brillo"></span>
+    </div>`;
+  const tituloHTML = (g) => { const [a, ...b] = g.titulo.split(" "); return `<h2>${esc(a)} <span>${esc(b.join(" "))}</span></h2>`; };
+
+  // muestra a alguien en la burbuja (o la vacía con id "")
+  function mostrar(cont, id) {
+    const b = $(".burbuja", cont);
+    $$(".capa", b).forEach((c) => c.classList.toggle("on", c.dataset.id === id));
+    if (!quieto) { b.classList.remove("barrer"); void b.offsetWidth; b.classList.add("barrer"); }
+  }
+  function ficha(f, p, vacio, k = 0) {
+    f.classList.remove("entra", "abierta", "panel", "par"); void f.offsetWidth;
+    if (p) f.classList.add("panel", k % 2 ? "par" : "x");
+    f.innerHTML = p
+      ? `<h3 class="pill">${esc(p.nombre)}</h3><div class="rol">${esc(p.personaje)}</div><p class="bio">${esc(p.bio)}</p><button class="leer" type="button">Leer más</button>`
+      : vacio && vacio.startsWith("?") ? `<p class="pregunta">${esc(vacio.slice(1))}</p>` : `<p class="vacia-txt">${esc(vacio)}</p>`;
+    f.classList.add("entra");
+    const l = $(".leer", f);
+    if (l) l.addEventListener("click", () => { f.classList.toggle("abierta"); l.textContent = f.classList.contains("abierta") ? "Leer menos" : "Leer más"; });
+  }
+  function deslizar(el, fn) {
+    let x0 = null;
+    el.addEventListener("pointerdown", (e) => { x0 = e.clientX; });
+    el.addEventListener("pointerup", (e) => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) fn(dx < 0 ? 1 : -1); });
+  }
+
+  // pasos de la secuencia, como en el video: título (si hay), la pregunta y cada persona
+  const pasos = (g) => [
+    ...(g.portada ? [{ capa: "portada", texto: "" }] : []),
+    { capa: "", texto: "?" + (g.pregunta || "¿Y quiénes tocan?") },
+    ...g.gente.map((p, k) => ({ capa: p.id, p, k })),
+  ];
+  function aplicar(cont, f, paso) {
+    mostrar(cont, paso.capa);
+    ficha(f, paso.p, paso.texto, paso.k);
+  }
+
+  // ---------- A: muta sola, en orden ----------
+  function opcionA(cont, g) {
+    const T = 5200, TI = 2200; // tiempo por persona y por paso de introducción
+    const ps = pasos(g);
+    cont.innerHTML = `<div class="grupo">${tituloHTML(g)}${burbujaHTML(g)}
+      <div class="selector">${g.gente.map((p) => `<button class="mini" type="button" data-id="${p.id}" aria-label="${esc(p.nombre)}"><img src="${cara(p.id)}" alt=""><svg class="aro" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" pathLength="100"/></svg></button>`).join("")}</div>
+      <article class="ficha"></article></div>`;
+    const botones = $$(".mini", cont); const f = $(".ficha", cont);
+    let i = -1, auto = true, reloj = null, visible = false;
+    cont.style.setProperty("--t", T + "ms");
+    function ir(n, manual) {
+      i = n % ps.length; if (i < 0) i += ps.length;
+      const paso = ps[i];
+      aplicar(cont, f, paso);
+      botones.forEach((b) => { b.classList.toggle("activa", paso.p && b.dataset.id === paso.p.id); b.classList.remove("corre"); });
+      if (manual) auto = false;
+      clearTimeout(reloj);
+      if (auto && visible && !quieto) {
+        const b = paso.p && botones.find((x) => x.dataset.id === paso.p.id);
+        if (b) { void b.offsetWidth; b.classList.add("corre"); }
+        // al terminar la vuelta vuelve a la primera persona, sin repetir la introducción
+        const sig = i + 1 < ps.length ? i + 1 : ps.findIndex((x) => x.p);
+        reloj = setTimeout(() => ir(sig), paso.p ? T : TI);
+      }
+    }
+    botones.forEach((b) => b.addEventListener("click", () => ir(ps.findIndex((x) => x.p && x.p.id === b.dataset.id), true)));
+    deslizar($(".burbuja", cont), (d) => ir(i + d, true));
+    new IntersectionObserver(([en]) => {
+      visible = en.isIntersecting && cont.offsetParent !== null;
+      if (visible && i < 0) ir(0);
+      else if (visible && auto) ir(i);
+      else clearTimeout(reloj);
+    }, { threshold: .45 }).observe($(".burbuja", cont));
+    aplicar(cont, f, ps[0]);
+  }
+
+  // ---------- B: lo maneja quien mira ----------
+  function opcionB(cont, g) {
+    const lugares = [[12, 18], [86, 14], [92, 62], [50, 96], [8, 70]];
+    cont.innerHTML = `<div class="grupo">${tituloHTML(g)}
+      <div class="campo">${burbujaHTML(g)}
+        <div class="estallido">${Array.from({ length: 8 }, (_, k) => `<i style="--x:${Math.round(Math.cos(k / 8 * 6.283) * 120)}px;--y:${Math.round(Math.sin(k / 8 * 6.283) * 120)}px"></i>`).join("")}<span class="anillo-pop"></span></div>
+        ${g.gente.map((p, k) => `<div class="flota" style="left:${lugares[k][0]}%;top:${lugares[k][1]}%;animation-delay:${-k * 1.3}s;animation-duration:${5.5 + k * .6}s"><button class="mini" type="button" data-id="${p.id}" aria-label="${esc(p.nombre)}"><img src="${cara(p.id)}" alt=""></button></div>`).join("")}
+        <div class="pista-toque">Tocá una burbuja</div>
+      </div>
+      <article class="ficha"></article></div>`;
+    const f = $(".ficha", cont); const grande = $(".burbuja", cont); const pop = $(".estallido", cont);
+    let actual = null, ocupado = false;
+    const inicio = { capa: g.portada ? "portada" : "", texto: "?" + (g.pregunta || "¿Y quiénes tocan?") };
+    aplicar(cont, f, inicio);
+    $$(".flota", cont).forEach((fl) => {
+      const btn = $(".mini", fl);
+      btn.addEventListener("click", () => {
+        if (ocupado) return;
+        const k = g.gente.findIndex((x) => x.id === btn.dataset.id); const p = g.gente[k];
+        $(".pista-toque", cont).classList.add("fuera");
+        if (actual) actual.classList.add("vista");
+        $$(".flota", cont).forEach((x) => x.classList.remove("elegida"));
+        fl.classList.add("elegida"); fl.classList.remove("vista"); actual = fl;
+        if (quieto) { aplicar(cont, f, { capa: p.id, p, k }); return; }
+        ocupado = true;
+        const a = btn.getBoundingClientRect(), b = grande.getBoundingClientRect();
+        const v = document.createElement("div"); v.className = "viaje";
+        v.innerHTML = `<img src="${cara(p.id)}" alt="">`;
+        Object.assign(v.style, { left: a.left + "px", top: a.top + "px", width: a.width + "px", height: a.height + "px" });
+        document.body.appendChild(v);
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          const s = b.width * .34;
+          Object.assign(v.style, { left: b.left + b.width / 2 - s / 2 + "px", top: b.top + b.height * .42 - s / 2 + "px", width: s + "px", height: s + "px", opacity: "0" });
+        }));
+        setTimeout(() => {
+          v.remove(); aplicar(cont, f, { capa: p.id, p, k });
+          pop.classList.remove("pop"); void pop.offsetWidth; pop.classList.add("pop");
+          ocupado = false;
+        }, 620);
+      });
+    });
+    grande.addEventListener("click", () => {
+      if (!actual) return;
+      actual.classList.remove("elegida"); actual.classList.add("vista"); actual = null;
+      aplicar(cont, f, { capa: "", texto: "Tocá otra burbujita." });
+    });
+  }
+
+  // ---------- C: el video llevado al scroll ----------
+  function opcionC(cont, g) {
+    const ps = pasos(g); const n = ps.length;
+    cont.innerHTML = `<div class="relato" style="height:calc(${n} * 62svh + 100svh)">
+      <div class="fijo">
+        <div class="encabezado">${esc(g.titulo)}</div>
+        ${burbujaHTML(g)}
+        <div class="puntos">${ps.map(() => "<i></i>").join("")}</div>
+        <article class="ficha"></article>
+      </div></div>`;
+    const rel = $(".relato", cont), f = $(".ficha", cont), puntos = $$(".puntos i", cont);
+    let i = -2;
+    function cuadro() {
+      const r = rel.getBoundingClientRect();
+      const recorrido = rel.offsetHeight - innerHeight;
+      const prog = Math.min(1, Math.max(0, -r.top / recorrido));
+      const k = Math.min(n - 1, Math.floor(prog * n * 1.02));
+      if (k !== i) { i = k; aplicar(cont, f, ps[k]); puntos.forEach((d, j) => d.classList.toggle("on", j === k)); }
+    }
+    addEventListener("scroll", () => requestAnimationFrame(cuadro), { passive: true });
+    cuadro();
+  }
+
+  opcionA($("#a-elenco"), P.elenco); opcionA($("#a-banda"), P.banda);
+  opcionB($("#b-elenco"), P.elenco); opcionB($("#b-banda"), P.banda);
+  opcionC($("#c-elenco"), P.elenco); opcionC($("#c-banda"), P.banda);
+
+  // pestañas
+  $$(".lab-tabs button").forEach((t) => t.addEventListener("click", () => {
+    $$(".lab-tabs button").forEach((x) => x.setAttribute("aria-selected", String(x === t)));
+    $$(".opcion").forEach((o) => o.classList.toggle("activa", o.id === "op-" + t.dataset.op));
+    window.scrollTo({ top: 0, behavior: "instant" });
+    if (location.hash !== "#" + t.dataset.op) history.replaceState(null, "", "#" + t.dataset.op);
+    dispatchEvent(new Event("scroll"));
+  }));
+  const h = location.hash.slice(1); if (h) { const t = $(`.lab-tabs [data-op="${h}"]`); if (t) t.click(); }
+  document.addEventListener("touchstart", () => {}, { passive: true });
+})();
+</script>
+</body>
+</html>
