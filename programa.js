@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.4";
+  const VERSION = "1.5";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -68,34 +68,55 @@
     `, cintas("a"));
   }
 
-  // 03 · Elenco
-  {
-    const elenco = (D.elenco || []).filter((p) => p.nombre || borrador);
-    if (elenco.length) {
-      const ig = (u) => {
-        if (!u) return "";
-        const h = u.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/.*$/, "");
-        return `<a class="ig" href="https://www.instagram.com/${esc(h)}/" target="_blank" rel="noopener">@${esc(h)}</a>`;
-      };
-      agregar("elenco", "Elenco", "oro", `
-        ${kicker("En escena")}
-        ${titulo(["El", "elenco"])}
-        <div class="elenco">${elenco.map((p, i) => `
-          <article class="actor${i % 2 ? " der" : ""}" data-reveal="actor">
-            <div class="marco"><div class="foto">${p.foto
-              ? `<img src="${esc(p.foto)}" alt="${esc(p.nombre ? p.nombre + " como " + p.personaje : p.personaje)}" loading="lazy" decoding="async">`
-              : `<div class="sin-foto" aria-hidden="true"><span class="ini">${esc(p.personaje[0])}</span><img class="fig" src="img/figura-blanca.webp" alt=""></div>`}
-            </div></div>
-            <div class="info">
-              <span class="n">${String(i + 1).padStart(2, "0")}</span>
-              <h3 class="personaje"><span>${esc(p.personaje)}</span></h3>
-              <div class="nombre">${p.nombre ? esc(p.nombre) : PEND}</div>
-              ${ig(p.instagram)}
-            </div>
-          </article>`).join("")}
-        </div>
-      `);
-    }
+  // Elenco y banda: un foquito de vidrio cuelga arriba y, a medida que bajás, oscila hacia el que toca,
+  // se apaga en el viaje y se enciende sobre esa persona. Tocar una silueta dentro del foco también la enciende.
+  // Caras dentro de cada imagen del foco (x, y, lado en px sobre 1254): zonas para tocar.
+  const CARAS = { diego: [322, 370, 159], rita: [551, 360, 153], clara: [768, 430, 135], german: [904, 348, 150], alicia: [133, 418, 122],
+    matias: [500, 540, 125], pablo: [372, 331, 123], fran: [545, 312, 120], tobias: [688, 585, 118], gonzalo: [729, 302, 107] };
+  const CASQUILLO = `<svg class="casquillo" viewBox="0 0 60 70" aria-hidden="true">
+      <defs><linearGradient id="laton" x1="0" x2="1"><stop offset="0" stop-color="#7a5a2c"/><stop offset=".35" stop-color="#e6c88c"/><stop offset=".6" stop-color="#b8915a"/><stop offset="1" stop-color="#5e431f"/></linearGradient></defs>
+      <rect x="22" y="0" width="16" height="10" rx="3" fill="#1c2420"/>
+      <rect x="12" y="8" width="36" height="46" rx="5" fill="url(#laton)"/>
+      <path d="M12 18h36M12 27h36M12 36h36M12 45h36" stroke="#5e431f" stroke-width="2.2" opacity=".55"/>
+      <path d="M14 54h32l-5 12H19z" fill="#2a2f2b"/>
+    </svg>`;
+  function escena(id, gente, intro, vacia) {
+    const capas = `<img class="capa on" data-i="-1" src="${vacia}" alt="">` + gente.map((p, i) =>
+      `<img class="capa" data-i="${i}" src="img/burbujas/${esc(p.foco)}.webp" alt="" decoding="async">`).join("");
+    const toques = gente.map((p, i) => {
+      const c = CARAS[p.foco]; if (!c) return "";
+      const cx = (c[0] + c[2] / 2) / 12.54, cy = (c[1] + c[2] * 0.9) / 12.54, w = c[2] * 1.5 / 12.54;
+      return `<button class="toque" type="button" data-i="${i}" style="left:${cx.toFixed(1)}%;top:${cy.toFixed(1)}%;width:${w.toFixed(1)}%;height:${(w * 1.7).toFixed(1)}%" aria-label="Encender a ${esc(p.nombre)}"></button>`;
+    }).join("");
+    return `<div class="escena" data-escena="${id}">
+      <div class="colgante-pista"><div class="colgante"><div class="pendulo">
+        <span class="cable"></span>${CASQUILLO}
+        <div class="foco"><span class="halo"></span><span class="cono"></span>${capas}<span class="apagon"></span>${toques}</div>
+      </div></div></div>
+      <div class="entradas">
+        <div class="entrada intro" data-i="-1"><p class="pregunta">${esc(intro)}</p><p class="pista-foco">Tocá una silueta o seguí bajando</p></div>
+        ${gente.map((p, i) => `<article class="entrada ${i % 2 ? "der" : "izq"}" data-i="${i}">
+          <p class="papel">${esc(p.personaje || p.rol)}</p>
+          <h3 class="pill${i % 2 ? " par" : ""}">${esc(p.nombre)}</h3>
+          ${p.bio ? `<p class="bio">${esc(p.bio)}</p><button class="leer" type="button">Leer más</button>` : ""}
+        </article>`).join("")}
+        <div class="cola"></div>
+      </div>
+    </div>`;
+  }
+  if (D.elenco && D.elenco.length) {
+    agregar("elenco", "Elenco", "oro", `
+      ${kicker("En escena")}
+      ${titulo(["El", "elenco"])}
+      ${escena("elenco", D.elenco, D.elencoIntro || "", "img/burbujas/elenco-vacia.webp")}
+    `);
+  }
+  if (D.banda && D.banda.length) {
+    agregar("banda", "Banda", "teal", `
+      ${kicker("En vivo")}
+      ${titulo(["La", "banda"])}
+      ${escena("banda", D.banda, D.bandaIntro || "", "img/burbujas/banda-vacia.webp")}
+    `);
   }
 
   // Canciones
@@ -292,7 +313,65 @@
   const raiz = document.documentElement;
   const portada = $("#portada");
   const parrafos = $$(".lectura p").map((p) => ({ el: p, w: $$(".w", p), n: -1 }));
-  const fotosActor = $$(".actor .foto img, .foto-obra img");
+  const fotosActor = $$(".foto-obra img");
+
+  // ---------- Foquito del elenco y la banda ----------
+  const escenas = $$(".escena").map((el) => ({
+    el, pend: $(".pendulo", el), capas: $$(".capa", el), entradas: $$(".entrada", el), apagon: $(".apagon", el),
+    ang: 0, vel: 0, lit: undefined,
+  }));
+  const ANG = 16; // grados a cada lado
+  const lado = (en) => (en.classList.contains("izq") ? 1 : en.classList.contains("der") ? -1 : 0);
+  const suave = (x) => x * x * (3 - 2 * x);
+  function encender(e, j) {
+    if (e.lit === j) return;
+    e.lit = j;
+    e.entradas.forEach((en, k) => en.classList.toggle("encendida", k === j));
+    if (j === null) { e.el.classList.add("oscuro"); return; }
+    const i = +e.entradas[j].dataset.i;
+    e.capas.forEach((c) => c.classList.toggle("on", +c.dataset.i === i));
+    e.el.classList.remove("oscuro");
+    if (!quieto) { e.apagon.classList.remove("parpadea"); void e.apagon.offsetWidth; e.apagon.classList.add("parpadea"); }
+  }
+  // devuelve true si el péndulo sigue en movimiento
+  function moverEscenas(vh, f) {
+    let mueve = false;
+    const linea = vh * 0.66;
+    escenas.forEach((e) => {
+      const r = e.el.getBoundingClientRect();
+      if (r.bottom < -vh * 0.2 || r.top > vh * 1.2) return;
+      // la referencia es el nombre (o la pregunta), no la caja entera
+      const cs = e.entradas.map((en) => { const b = ($(".pill, .pregunta", en) || en).getBoundingClientRect(); return b.top + b.height / 2; });
+      let j = 0;
+      while (j < cs.length - 2 && cs[j + 1] < linea) j++;
+      const t = clamp((linea - cs[j]) / (cs[j + 1] - cs[j]));
+      encender(e, t < 0.38 ? j : t > 0.62 ? j + 1 : null);
+      // lo que ya pasó por arriba se apaga del todo (si no, asoma alrededor del foco)
+      e.entradas.forEach((en, k) => en.classList.toggle("pasada", cs[k] < linea - vh * 0.2));
+      const meta = quieto ? 0 : ANG * (lado(e.entradas[j]) + (lado(e.entradas[j + 1]) - lado(e.entradas[j])) * suave(t));
+      // resorte con un poco de rebote: se siente como algo que cuelga
+      e.vel += (meta - e.ang) * 0.06 * f;
+      e.vel *= Math.pow(0.8, f);
+      e.ang += e.vel * f;
+      if (quieto) { e.ang = 0; e.vel = 0; }
+      e.pend.style.rotate = e.ang.toFixed(2) + "deg";
+      if (Math.abs(e.vel) > 0.02 || Math.abs(meta - e.ang) > 0.05) mueve = true;
+    });
+    return mueve;
+  }
+  escenas.forEach((e) => {
+    const ir = (k) => {
+      const en = e.entradas.find((x) => +x.dataset.i === k); if (!en) return;
+      const b = ($(".pill, .pregunta", en) || en).getBoundingClientRect();
+      window.scrollTo({ top: window.scrollY + b.top + b.height / 2 - innerHeight * 0.66, behavior: quieto ? "auto" : "smooth" });
+    };
+    $$(".toque", e.el).forEach((t) => t.addEventListener("click", () => ir(+t.dataset.i)));
+    e.entradas.forEach((en) => {
+      en.addEventListener("click", (ev) => { if (!ev.target.closest(".leer") && !en.classList.contains("encendida")) ir(+en.dataset.i); });
+      const l = $(".leer", en);
+      if (l) l.addEventListener("click", () => { en.classList.toggle("abierta"); l.textContent = en.classList.contains("abierta") ? "Leer menos" : "Leer más"; });
+    });
+  });
   const cintasEls = $$(".cinta").map((c) => ({ el: c, r: $(".rodillo", c), dir: +c.dataset.dir, x: 0, ancho: 0, visible: false }));
   let ultimoY = window.scrollY;
   let velocidad = 0;
@@ -373,7 +452,8 @@
       });
     }
 
-    const siguen = (!quieto && cintasEls.some((c) => c.visible)) || Math.abs(velocidad) > 0.2;
+    const pendulo = moverEscenas(vh, f);
+    const siguen = (!quieto && cintasEls.some((c) => c.visible)) || Math.abs(velocidad) > 0.2 || pendulo;
     if (siguen) requestAnimationFrame(cuadro); else { corriendo = false; ultimoT = 0; }
   }
   function arrancar() {

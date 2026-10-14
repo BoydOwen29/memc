@@ -294,51 +294,60 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 .premio p { margin: 0; font-size: 15px; color: var(--tenue); line-height: 1.5; }
 .duracion { margin-top: 18px; font-size: 15px; color: var(--tenue); }
 
-/* ---------- 03 · Elenco ---------- */
-.elenco { display: grid; gap: 54px; }
-.actor { display: grid; grid-template-columns: 46% 1fr; gap: 18px; align-items: end; }
-.actor.der { grid-template-columns: 1fr 46%; }
-.actor.der .marco { order: 2; }
-.actor.der .info { text-align: right; }
-.actor.der .personaje { transform-origin: right bottom; }
-.marco { position: relative; }
-.marco::after {
-  content: ""; position: absolute; inset: 0; translate: 9px 9px; z-index: -1;
-  border: 1px solid var(--coral); opacity: .55;
+/* ---------- Elenco y banda: el foquito ----------
+   El foco cuelga arriba (pegado mientras bajás por la sección) y oscila hacia el que toca.
+   Solo se mueve con rotate (transform): no se repinta. */
+.escena { position: relative; margin: 0 calc(var(--gutter) * -1); --d: min(56vw, 32svh, 290px); --cable: 8svh; }
+.colgante-pista { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.colgante { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+.pendulo { position: absolute; left: 50%; top: -2px; width: 0; height: 0; transform-origin: 0 0; will-change: rotate; }
+.cable { position: absolute; left: -1px; top: 0; width: 2px; height: var(--cable); background: linear-gradient(#0b0f0d, #46564d); }
+.casquillo { position: absolute; left: calc(var(--d) * -.11); top: calc(var(--cable) - 2px); width: calc(var(--d) * .22); height: auto; }
+.foco { position: absolute; left: calc(var(--d) / -2); top: calc(var(--cable) + var(--d) * .2); width: var(--d); height: var(--d); isolation: isolate; }
+/* el borde redondo ya viene en la imagen (alfa): una máscara CSS en algo que gira se recalcula en cada cuadro */
+.foco .capa {
+  position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .5s ease;
+  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; pointer-events: none;
 }
-.actor:nth-child(2n) .marco::after { border-color: var(--teal-claro); translate: -9px 9px; }
-.foto { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--superficie-2); }
-.foto img { position: absolute; left: 0; top: -8%; width: 100%; height: 116%; object-fit: cover; object-position: 50% 20%; translate: 0 var(--py, 0%); }
-.sin-foto { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; }
-.sin-foto .ini { font: italic 800 clamp(80px, 26vw, 140px)/1 var(--display); color: rgba(244, 238, 227, .92); rotate: -8deg; }
-.sin-foto img.fig { position: absolute; right: 12%; bottom: 8%; left: auto; top: auto; width: auto; height: 34%; opacity: .32; translate: none; }
-.actor:nth-child(3n+1) .sin-foto { background: linear-gradient(165deg, #ff8f79, #a8402e); }
-.actor:nth-child(3n+2) .sin-foto { background: linear-gradient(165deg, #0aa38d, #0b3a27); }
-.actor:nth-child(3n+3) .sin-foto { background: linear-gradient(165deg, #d0a65a, #5f4520); }
-.info { padding-bottom: 4px; min-width: 0; }
-.info .n { font: 600 13px/1 var(--display); letter-spacing: .2em; color: var(--teal-claro); }
-.personaje {
-  margin: 10px 0 12px; padding: .08em .14em .02em 0; overflow: hidden;
-  font: italic 800 clamp(40px, 12.6vw, 66px)/.86 var(--display); text-transform: uppercase; color: var(--coral);
-  rotate: -8deg; transform-origin: left bottom; overflow-wrap: anywhere;
+.foco .capa.on { opacity: 1; }
+/* las que no se ven, fuera del dibujo del todo (cuando termina el fundido) */
+.foco .capa:not(.on) { visibility: hidden; transition: opacity .5s ease, visibility 0s linear .5s; }
+.foco .halo { position: absolute; inset: -20%; z-index: -1; background: url("img/luz/halo.png") center / 100% 100% no-repeat; opacity: 1; transition: opacity .35s ease; }
+.foco .cono { position: absolute; left: 50%; top: 88%; width: 150%; height: 150%; translate: -50% 0; z-index: -1; background: url("img/luz/cono.png") center top / 100% 100% no-repeat; opacity: .9; transition: opacity .35s ease; }
+.foco .apagon { position: absolute; inset: 3%; border-radius: 50%; background: rgba(4, 8, 6, .72); opacity: 0; transition: opacity .2s ease; pointer-events: none; }
+.escena.oscuro .apagon { opacity: 1; }
+.escena.oscuro .halo, .escena.oscuro .cono { opacity: 0; }
+.foco .apagon.parpadea { animation: parpadeo .8s linear; }
+@keyframes parpadeo { 0% { opacity: 1; } 12% { opacity: 0; } 22% { opacity: .75; } 32% { opacity: 0; } 46% { opacity: .4; } 58%, 100% { opacity: 0; } }
+.foco .toque {
+  position: absolute; translate: -50% -50%; border: 0; padding: 0; border-radius: 45% 45% 40% 40%;
+  background: transparent; cursor: pointer; pointer-events: auto; touch-action: manipulation;
 }
-.actor.der .personaje { padding: .08em 0 .02em .14em; }
-.personaje span { display: inline-block; }
-.info .nombre { font: 600 18px/1.25 var(--cuerpo); }
-.info .ig { display: inline-block; margin-top: 6px; font-size: 14px; color: var(--tenue); text-decoration: none; }
-.js .actor .foto { clip-path: inset(100% 0 0 0); transition: clip-path 1.25s var(--curva); }
-.js .actor .foto > * { scale: 1.25; transition: scale 1.6s var(--curva); }
-.js .actor .marco::after { opacity: 0; transition: opacity 1s ease .5s; }
-.js .actor .info > * { opacity: 0; transform: translateY(18px); transition: opacity .8s var(--curva), transform .9s var(--curva); }
-.js .actor .info > .personaje { opacity: 1; transform: none; }
-.js .actor .personaje span { transform: translateY(110%); transition: transform 1s var(--curva) .2s; }
-.js .actor .info > :nth-child(3) { transition-delay: .35s; }
-.js .actor .info > :nth-child(4) { transition-delay: .45s; }
-.js .actor.visto .foto { clip-path: inset(0 0 0 0); }
-.js .actor.visto .foto > * { scale: 1; }
-.js .actor.visto .marco::after { opacity: .55; }
-.js .actor.visto .info > * { opacity: 1; transform: none; }
-.js .actor.visto .personaje span { transform: none; }
+.foco .toque:active { background: rgba(255, 230, 170, .12); }
+
+.entradas { position: relative; z-index: 1; padding: 0 var(--gutter); }
+.entrada { min-height: 62vh; min-height: 62svh; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 6svh; opacity: .22; transition: opacity .6s ease; cursor: pointer; }
+.entrada.encendida { opacity: 1; cursor: auto; }
+.entrada.pasada { opacity: 0; }
+.entrada.intro { min-height: 92vh; min-height: 92svh; align-items: center; text-align: center; }
+.entrada.izq { align-items: flex-start; text-align: left; padding-right: 10%; }
+.entrada.der { align-items: flex-end; text-align: right; padding-left: 10%; }
+.entradas .cola { height: 30vh; height: 30svh; }
+.pregunta { margin: 0; font: italic 800 clamp(30px, 9vw, 44px)/1 var(--display); text-transform: uppercase; color: #dca56c; rotate: -4deg; }
+.pista-foco { margin: 14px 0 0; font: 600 12px/1 var(--display); letter-spacing: .24em; text-transform: uppercase; color: var(--tenue); }
+.papel { margin: 0 0 12px; font: italic 800 clamp(30px, 9vw, 44px)/.9 var(--display); text-transform: uppercase; color: var(--coral); rotate: -6deg; }
+.entrada.der .papel { transform-origin: right bottom; }
+.pill {
+  display: inline-block; margin: 0; padding: 10px 18px 8px; border-radius: 999px; background: #2bd394; color: #14211b;
+  font: 800 clamp(22px, 6.8vw, 30px)/1 var(--display); text-transform: uppercase; letter-spacing: .02em;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .35);
+}
+.pill.par { background: #dca56c; }
+.entrada .bio { margin: 14px 0 0; max-width: 34em; color: #cfd8d2; font-size: 15.5px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.entrada.abierta .bio { display: block; -webkit-line-clamp: unset; }
+.entrada .leer { margin-top: 2px; padding: 14px 0; min-height: 44px; border: 0; background: none; cursor: pointer; color: var(--teal-claro); font: 600 14px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; }
+.js .entrada .pill, .js .entrada .papel { transition: transform .7s var(--curva), opacity .5s ease; }
+.js .entrada:not(.encendida) .pill { transform: translateY(8px) scale(.96); }
 
 /* ---------- Canciones ---------- */
 .canciones { list-style: none; margin: 0; padding: 0; counter-reset: c; }
@@ -510,12 +519,6 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 /* ---------- Pantallas ---------- */
 @media (max-width: 340px) {
   body { font-size: 16px; }
-  .actor, .actor.der { grid-template-columns: 1fr; }
-  .actor.der .marco { order: 0; }
-  .actor.der .info { text-align: left; }
-  .actor.der .personaje { transform-origin: left bottom; padding: .08em .14em .02em 0; }
-  .marco { width: 78%; }
-  .actor.der .marco { margin-left: auto; }
   .premio { grid-template-columns: 1fr; justify-items: start; }
   .dock-boton { gap: 8px; }
 }
@@ -548,11 +551,6 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
   .js [data-reveal="lineas"] .l > span { transform: none; opacity: 0; transition: opacity 1s ease calc(var(--i, 0) * 120ms); }
   .js [data-reveal="lineas"].visto .l > span { opacity: 1; }
   .js [data-reveal="sello"] { transform: none; }
-  .js .actor .foto { clip-path: none; opacity: 0; transition: opacity 1s ease; }
-  .js .actor.visto .foto { opacity: 1; }
-  .js .actor .foto > * { scale: none; }
-  .js .actor .info > * { transform: none; }
-  .js .actor .personaje span { transform: none; }
   .js .galeria button { translate: none; }
   .js .foto-obra img { clip-path: none; scale: none; opacity: 0; transition: opacity 1s ease; }
   .js .foto-obra.visto img { opacity: 1; }
@@ -568,4 +566,6 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
   .menu-lista a { transform: none; }
   .visor[open] .visor-pista { animation: none; }
   .dock-nombre.cambia { animation: none; }
+  .foco .apagon.parpadea { animation: none; }
+  .js .entrada:not(.encendida) .pill { transform: none; }
 }
