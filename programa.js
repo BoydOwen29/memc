@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.7";
+  const VERSION = "1.8";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -226,7 +226,7 @@
     const CARAS = { german: [0.7807, 0.3672], rita: [0.5004, 0.3786], diego: [0.3202, 0.3902], clara: [0.6663, 0.4236], alicia: [0.1547, 0.4063],
       matias: [0.4486, 0.5054], pablo: [0.3457, 0.3375], fran: [0.4825, 0.3206], tobias: [0.5957, 0.5371], gonzalo: [0.624, 0.3048] };
     const GRUPOS = {
-      elenco: { gente: (D.elenco || []).map((p) => ({ ...p, id: p.foco, papel: p.personaje })), portada: true, intro: D.elencoIntro || "", recorte: true },
+      elenco: { gente: (D.elenco || []).map((p) => ({ ...p, id: p.foco, papel: p.personaje })), portada: false, intro: D.elencoIntro || "", recorte: true },
       banda: { gente: (D.banda || []).map((p) => ({ ...p, id: p.foco, papel: p.rol })), portada: false, intro: D.bandaIntro || "", recorte: false },
     };
     let grupo = GRUPOS.elenco.gente.length ? "elenco" : "banda";
@@ -267,8 +267,11 @@
             ${g.gente.map((p) => { const c = CARAS[p.id] || [0.5, 0.5]; return `<button class="e-toque" type="button" data-id="${esc(p.id)}" style="left:${(c[0] * 100).toFixed(2)}%;top:${(c[1] * 100).toFixed(2)}%" aria-label="Conocer a ${esc(p.nombre)}"></button>`; }).join("")}
           </div>
           <div class="e-sombra"></div>
+          <div class="e-haz" aria-hidden="true"></div>
           ${g.recorte ? g.gente.map((p) => `<img class="e-recorte" data-k="${esc(p.id)}" src="${E}recorte-${esc(p.id)}.webp" alt="${esc(p.nombre)}" loading="lazy" decoding="async">`).join("") : ""}
           <div class="e-velo"></div>
+          <div class="e-apagon" aria-hidden="true"></div>
+          <div class="e-lampara" aria-hidden="true"><span class="e-cable"></span><span class="e-casquillo"></span><span class="e-bombilla"></span></div>
           <div class="e-texto" aria-live="polite"></div>
         </div>
         <div class="e-caras">${g.gente.map((p) => `<button class="e-cara" type="button" data-id="${esc(p.id)}" aria-label="${esc(p.nombre)}"><img src="${E}cara-${esc(p.id)}.webp" alt="" loading="lazy" decoding="async"><svg class="aro" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" pathLength="100"/></svg></button>`).join("")}</div>`;
@@ -296,7 +299,10 @@
         actual = i; const paso = ps[i];
         const k = paso.tipo === "portada" ? "portada" : paso.p ? paso.p.id : "vacia";
         $$(".e-recorte", raiz).forEach((r) => r.classList.remove("on"));
-        cuadro.classList.remove("con-recorte");
+        cuadro.classList.remove("con-recorte", "encendido");
+        // corte de luz: la escena parpadea a oscuro mientras la cámara viaja
+        if (!quieto) { const a = $(".e-apagon", raiz); a.classList.remove("corta"); void a.offsetWidth; a.classList.add("corta"); }
+        if (paso.p) setTimeout(() => { if (actual === i) cuadro.classList.add("encendido"); }, quieto ? 0 : 620);
         cam.style.transform = encuadre(paso);
         $$(".e-capa", cam).forEach((c) => c.classList.toggle("on", c.dataset.k === k));
         if (paso.p && g.recorte) setTimeout(() => {
