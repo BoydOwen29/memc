@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.10";
+  const VERSION = "1.11";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -62,7 +62,6 @@
       ${titulo(["De qué", "se trata"])}
       ${s.pendiente && borrador ? '<p class="nota-pendiente" data-reveal="sube">Borrador: falta el texto oficial</p>' : ""}
       <div class="lectura">${s.parrafos.map((p) => `<p>${palabras(p)}</p>`).join("")}</div>
-      ${s.resena ? `<blockquote class="resena" data-reveal="sube"><p>“${esc(s.resena.cita)}”</p><footer>${s.resena.url ? `<a href="${esc(s.resena.url)}" target="_blank" rel="noopener">${esc(s.resena.autora)}</a>` : esc(s.resena.autora)}</footer></blockquote>` : ""}
       ${s.foto ? `<figure class="foto-obra" data-reveal="telon"><img src="${esc(s.foto.chica || s.foto.src)}" srcset="${esc(s.foto.chica || s.foto.src)} 800w, ${esc(s.foto.src)} 1600w" sizes="(min-width: 700px) 600px, 100vw" alt="${esc(s.foto.alt)}" loading="lazy" decoding="async"></figure>` : ""}
       ${(sello || s.dato) ? `<div class="premio">${sello}${s.dato ? `<p data-reveal="sube" style="--d:200ms">${esc(s.dato)}</p>` : ""}</div>` : ""}
       ${D.obra.duracion ? `<p class="duracion" data-reveal="sube">Duración: ${esc(D.obra.duracion)}</p>` : ""}
