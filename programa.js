@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.15";
+  const VERSION = "1.16";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -12,6 +12,7 @@
   const PEND = borrador ? '<span class="pendiente">a confirmar</span>' : "";
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const ICONO_COMPARTIR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
+  const ICONO_TIKTOK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.3 4.5 5 4.8"/></svg>';
   const ICONO_IG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>';
 
   // ---------- Título de la portada, armado en piezas ----------
@@ -173,6 +174,7 @@
     redes.push(`<button class="boton${D.entradas ? " secundario" : ""}" type="button" data-compartir>${ICONO_COMPARTIR}Compartir el programa</button>`);
     if (D.redes.obra) redes.push(`<a class="boton secundario" href="${esc(D.redes.obra)}" target="_blank" rel="noopener">${ICONO_IG}La obra en Instagram</a>`);
     if (D.redes.productora) redes.push(`<a class="boton secundario" href="${esc(D.redes.productora)}" target="_blank" rel="noopener">${ICONO_IG}Brux en Instagram</a>`);
+    if (D.redes.tiktok) redes.push(`<a class="boton secundario" href="${esc(D.redes.tiktok)}" target="_blank" rel="noopener">${ICONO_TIKTOK}Brux en TikTok</a>`);
     agregar("gracias", "Gracias", "coral", `
       <div class="centrado">${titulo(D.cierre.titulo)}</div>
       <div class="escenario" data-reveal="escenario"><img src="img/figura.webp" alt=""></div>
@@ -189,7 +191,7 @@
   $("#pie").innerHTML = `
     <img class="brux" src="img/brux-blanco.svg" alt="Brux Producciones" width="122" height="54">
     <div>Brux Producciones · Córdoba</div>
-    <div><a href="${esc(D.redes.productora)}" target="_blank" rel="noopener">@brux.producciones</a></div>
+    <div><a href="${esc(D.redes.productora)}" target="_blank" rel="noopener">Instagram</a>${D.redes.tiktok ? ` · <a href="${esc(D.redes.tiktok)}" target="_blank" rel="noopener">TikTok</a>` : ""} · @brux.producciones</div>
     ${D.credito ? `<a class="credito" href="${esc(D.credito.url)}" target="_blank" rel="noopener">${esc(D.credito.texto)} · v${VERSION}</a>` : ""}
   `;
 
@@ -234,14 +236,14 @@
     let grupo = GRUPOS.elenco.gente.length ? "elenco" : "banda";
     let actual = 0; // 0 = el foco; k + 1 = la persona k
     const v = `?v=${VERSION}`;
-    function montar() {
+    function montar(desde = 0) {
       const g = GRUPOS[grupo], n = g.gente.length;
       const hay = (k) => GRUPOS[k].gente.length;
       const capa = (k, txt, clase) => `<p class="${clase}" data-k="${esc(k)}" aria-hidden="true">${esc(txt)}</p>`;
       raiz.innerHTML = `${hay("elenco") && hay("banda") ? `<div class="e-seg">
           <button type="button" data-g="elenco" aria-pressed="${grupo === "elenco"}">Elenco</button>
           <button type="button" data-g="banda" aria-pressed="${grupo === "banda"}">Banda</button></div>` : ""}
-        <div class="e-cuadro en-foco">
+        <div class="e-cuadro en-foco${desde ? (desde > 0 ? " entra-der" : " entra-izq") : ""}">
           <div class="e-fondo" aria-hidden="true"></div>
           ${g.gente.map((p) => capa(p.id, p.palabra, "e-palabra")).join("")}
           ${g.gente.map((p) => `<div class="e-figura" data-id="${esc(p.id)}"><img src="img/${grupo}/${esc(p.id)}.webp${v}" alt="${esc(p.nombre)}" decoding="async"></div>`).join("")}
@@ -254,7 +256,8 @@
       const cuadro = $(".e-cuadro", raiz), texto = $(".e-texto", raiz), foco = $(".e-foco", raiz), figuras = $$(".e-figura", raiz);
       actual = 0;
       function textoHTML(i) {
-        if (!i) return `<p class="e-pregunta">${esc(g.intro)}</p><p class="e-pista">Tocá el foco</p>`;
+        const otro = grupo === "elenco" ? "banda" : "elenco";
+        if (!i) return `<p class="e-pregunta">${esc(g.intro)}</p><p class="e-pista">Tocá el foco${hay(otro) ? ` · Deslizá para ${otro === "banda" ? "la banda" : "el elenco"}` : ""}</p>`;
         const p = g.gente[i - 1];
         return `${p.papel ? `<p class="e-papel">${esc(p.papel)}</p>` : ""}<h3 class="e-pill" style="--tono:${PILDORAS[(i - 1) % 2]}">${esc(p.nombre)}</h3>` +
           (p.bio ? `<p class="e-bio">${esc(p.bio)}</p><button class="e-leer" type="button">Leer más</button>` : "");
@@ -303,14 +306,18 @@
         siguiente();
       });
       $$(".e-cara", raiz).forEach((b, k) => b.addEventListener("click", () => { if (actual !== k + 1) ir(k + 1); }));
-      $$(".e-seg button", raiz).forEach((b) => b.addEventListener("click", () => { if (b.dataset.g !== grupo) { grupo = b.dataset.g; montar(); } }));
-      // deslizar de costado: adelante o atrás
+      $$(".e-seg button", raiz).forEach((b) => b.addEventListener("click", () => { if (b.dataset.g !== grupo) { const d = b.dataset.g === "banda" ? 1 : -1; grupo = b.dataset.g; montar(d); } }));
+      // deslizar de costado: a la izquierda va a la banda, a la derecha al elenco (como el selector de arriba)
       let x0 = null, y0 = 0;
       cuadro.addEventListener("pointerdown", (e) => { x0 = e.clientX; y0 = e.clientY; deslizo = false; });
       cuadro.addEventListener("pointercancel", () => { x0 = null; });
       cuadro.addEventListener("pointerup", (e) => {
         if (x0 === null) return; const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
-        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { deslizo = true; ir(dx < 0 ? (actual + 1) % (n + 1) : (actual + n) % (n + 1)); }
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+          deslizo = true;
+          const destino = dx < 0 ? "banda" : "elenco";
+          if (destino !== grupo && hay(destino)) { grupo = destino; montar(dx < 0 ? 1 : -1); }
+        }
       });
       ponerTexto(0, 0);
     }
