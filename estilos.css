@@ -279,6 +279,11 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 .js .lectura .w { opacity: .18; transition: opacity .45s ease; }
 .js .lectura .w.on { opacity: 1; }
 .lectura .w.clave { color: var(--coral); }
+/* la frase de la reseña */
+.resena { margin: 30px 0 0; padding-left: 16px; border-left: 3px solid var(--coral); }
+.resena p { margin: 0; font: italic 700 clamp(22px, 6.4vw, 30px)/1.12 var(--display); text-transform: uppercase; color: var(--arena); }
+.resena footer { margin-top: 0; font: 600 12.5px/1.3 var(--display); letter-spacing: .18em; text-transform: uppercase; color: var(--tenue); }
+.resena a { display: inline-block; padding: 12px 0; color: inherit; text-decoration: underline; text-decoration-color: var(--linea); text-underline-offset: 4px; }
 /* foto grande de la obra: se abre como un telón desde el centro */
 .foto-obra { position: relative; margin: 34px calc(var(--gutter) * -1) 6px; aspect-ratio: 3 / 2; overflow: hidden; }
 .foto-obra img { position: absolute; left: 0; top: -9%; width: 100%; height: 118%; object-fit: cover; translate: 0 var(--py, 0%); }
@@ -369,6 +374,17 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 .e-cara.activa .aro circle { stroke-dashoffset: 0; }
 .e-cara.activa.corre .aro circle { animation: e-aro var(--t, 5.2s) linear both; }
 @keyframes e-aro { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+/* al principio, las imágenes del foco que armaron (tal cual, solo se funden una en otra) */
+.e-foco {
+  position: absolute; left: 50%; top: 0; z-index: 4; width: min(100%, 72vh); aspect-ratio: 1; padding: 0; border: 0; background: none; cursor: pointer;
+  translate: -50% 0; opacity: 0; visibility: hidden; touch-action: pan-y; transition: opacity .8s ease, visibility 0s linear .8s;
+}
+@supports (width: 1cqh) { .e-foco { width: min(100cqw, 66cqh); } }
+.en-foco .e-foco { opacity: 1; visibility: visible; transition: opacity .6s ease; }
+.e-foco img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .9s ease; }
+.e-foco img.on { opacity: 1; }
+/* al aparecer todos juntos, de a uno */
+.e-cuadro:not(.solo) .e-figura.on { transition: transform .95s var(--curva), opacity .6s ease calc(.2s + var(--k) * 90ms); }
 
 /* ---------- Canciones ---------- */
 .canciones { list-style: none; margin: 0; padding: 0; counter-reset: c; }
@@ -595,6 +611,6 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
   .menu-lista a { transform: none; }
   .visor[open] .visor-pista { animation: none; }
   .dock-nombre.cambia { animation: none; }
-  .e-figura, .e-figura.activa, .e-figura:not(.on), .e-palabra, .e-palabra.on { transition-property: opacity, visibility; }
+  .e-figura, .e-figura.activa, .e-figura:not(.on), .e-cuadro:not(.solo) .e-figura.on, .e-palabra, .e-palabra.on, .e-foco, .en-foco .e-foco { transition-property: opacity, visibility; }
   .e-cara.activa { transform: none; }
 }

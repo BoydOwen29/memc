@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.9";
+  const VERSION = "1.10";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -47,7 +47,7 @@
   // 02 · La obra
   if (D.sinopsis && D.sinopsis.parrafos.length) {
     const s = D.sinopsis;
-    const claves = /^(achicarse|chiquita|imposible|amor)/i;
+    const claves = /^(achicarse|agrandarse|chiquita|juntos|luz)/i;
     const palabras = (t) => esc(t).split(/\s+/).map((w) => `<span class="w${claves.test(w) ? " clave" : ""}">${w}</span>`).join(" ");
     const sello = s.sello ? `
       <div class="sello" data-reveal="sello">
@@ -62,6 +62,7 @@
       ${titulo(["De qué", "se trata"])}
       ${s.pendiente && borrador ? '<p class="nota-pendiente" data-reveal="sube">Borrador: falta el texto oficial</p>' : ""}
       <div class="lectura">${s.parrafos.map((p) => `<p>${palabras(p)}</p>`).join("")}</div>
+      ${s.resena ? `<blockquote class="resena" data-reveal="sube"><p>“${esc(s.resena.cita)}”</p><footer>${s.resena.url ? `<a href="${esc(s.resena.url)}" target="_blank" rel="noopener">${esc(s.resena.autora)}</a>` : esc(s.resena.autora)}</footer></blockquote>` : ""}
       ${s.foto ? `<figure class="foto-obra" data-reveal="telon"><img src="${esc(s.foto.chica || s.foto.src)}" srcset="${esc(s.foto.chica || s.foto.src)} 800w, ${esc(s.foto.src)} 1600w" sizes="(min-width: 700px) 600px, 100vw" alt="${esc(s.foto.alt)}" loading="lazy" decoding="async"></figure>` : ""}
       ${(sello || s.dato) ? `<div class="premio">${sello}${s.dato ? `<p data-reveal="sube" style="--d:200ms">${esc(s.dato)}</p>` : ""}</div>` : ""}
       ${D.obra.duracion ? `<p class="duracion" data-reveal="sube">Duración: ${esc(D.obra.duracion)}</p>` : ""}
@@ -216,8 +217,9 @@
 
   // ---------- Elenco y banda: el afiche ----------
   // Todo pasa en el mismo lugar, como un afiche que cambia: el color de fondo, el nombre gigante detrás y la persona
-  // adelante, que lo tapa. Arranca con todos juntos (el saludo final) y después pasa uno por uno. Va solo mientras
-  // está en pantalla y se frena apenas alguien toca. Solo se animan transform y opacity.
+  // adelante, que lo tapa. Arranca con las imágenes del foco que armaron ellos (img/foco/: el título y las siluetas),
+  // que se funden en todos juntos (el saludo final); después pasa uno por uno. Va solo mientras está en pantalla y
+  // se frena apenas alguien toca. Solo se animan transform y opacity.
   (function afiche() {
     const raiz = $("#escenario");
     if (!raiz) return;
@@ -225,14 +227,16 @@
     const TONOS = ["#ff856e", "#34c4aa", "#c89d4c", "#e4d5b6", "#2bd394"];
     const primerNombre = (n) => n.split(" ")[0];
     const GRUPOS = {
-      elenco: { titulo: "Elenco", intro: D.elencoIntro || "", gente: (D.elenco || []).map((p) => ({ ...p, palabra: p.personaje, papel: "" })) },
-      banda: { titulo: "Banda", intro: D.bandaIntro || "", gente: (D.banda || []).map((p) => ({ ...p, palabra: primerNombre(p.nombre), papel: p.rol })) },
+      elenco: { focos: ["portada", "elenco"], titulo: "Elenco", intro: D.elencoIntro || "", gente: (D.elenco || []).map((p) => ({ ...p, palabra: p.personaje, papel: "" })) },
+      banda: { focos: ["banda"], titulo: "Banda", intro: D.bandaIntro || "", gente: (D.banda || []).map((p) => ({ ...p, palabra: primerNombre(p.nombre), papel: p.rol })) },
     };
     let grupo = GRUPOS.elenco.gente.length ? "elenco" : "banda";
     let reloj = null, auto = true, actual = null, visible = false, iniciado = false;
     let ps = [], ir = () => {};
+    const PISTA = '<p class="e-pista">Tocá a alguien o deslizá</p>';
     function textoHTML(paso, g) {
-      if (!paso.p) return `<p class="e-pregunta">${esc(g.intro)}</p><p class="e-pista">Tocá a alguien o deslizá</p>`;
+      if (paso.tipo === "foco") return `<p class="e-pregunta">${esc(g.intro)}</p>`;
+      if (paso.tipo === "todos") return `<p class="e-pregunta">${esc(g.intro)}</p>${PISTA}`;
       const p = paso.p;
       return `${p.papel ? `<p class="e-papel">${esc(p.papel)}</p>` : ""}<h3 class="e-pill" style="--tono:${p.tono}">${esc(p.nombre)}</h3>` +
         (p.bio ? `<p class="e-bio">${esc(p.bio)}</p><button class="e-leer" type="button">Leer más</button>` : "");
@@ -245,12 +249,12 @@
       if (!auto || !visible) return;
       const c = ps[i].p && caras.find((x) => x.dataset.id === ps[i].p.id);
       if (c && !quieto) { void c.offsetWidth; c.classList.add("corre"); }
-      const sig = i + 1 < ps.length ? i + 1 : 1;
-      reloj = setTimeout(() => ir(sig), ps[i].p ? T : 3000);
+      const sig = i + 1 < ps.length ? i + 1 : 0;
+      reloj = setTimeout(() => ir(sig), ps[i].p ? T : ps[i].tipo === "foco" ? 2400 : 3200);
     }
     function montar() {
       const g = GRUPOS[grupo], n = g.gente.length;
-      ps = [{ p: null }, ...g.gente.map((p) => ({ p }))]; actual = null; clearTimeout(reloj);
+      ps = [...g.focos.map((f) => ({ tipo: "foco", f })), { tipo: "todos" }, ...g.gente.map((p) => ({ tipo: "persona", p }))]; actual = null; clearTimeout(reloj);
       g.gente.forEach((p, k) => { p.tono = TONOS[k % TONOS.length]; });
       const hay = (k) => GRUPOS[k].gente.length;
       const capa = (k, txt, clase) => `<p class="${clase}" data-k="${esc(k)}" aria-hidden="true">${esc(txt)}</p>`;
@@ -264,6 +268,7 @@
           ${capa("todos", g.titulo, "e-palabra on")}${g.gente.map((p) => capa(p.id, p.palabra, "e-palabra")).join("")}
           ${g.gente.map((p, k) => `<button class="e-figura" type="button" data-id="${esc(p.id)}" style="--k:${k}" aria-label="Conocer a ${esc(p.nombre)}"><img src="img/${grupo}/${esc(p.id)}.webp" alt="" decoding="async"></button>`).join("")}
           ${g.gente.map((p) => capa(p.id, p.palabra, "e-palabra e-borde")).join("")}
+          <button class="e-foco" type="button" aria-label="Ver a todos">${g.focos.map((f) => `<img data-f="${f}" src="img/foco/${f}.webp" alt="" decoding="async">`).join("")}</button>
           <div class="e-velo"></div>
           <div class="e-texto" aria-live="polite"></div>
         </div>
@@ -271,11 +276,16 @@
       const cuadro = $(".e-cuadro", raiz), texto = $(".e-texto", raiz), figuras = $$(".e-figura", raiz);
       // todos juntos: en fila, más chicos y arriba; los impares un poco más adelante
       const enFila = (k) => {
-        const W = cuadro.clientWidth, H = cuadro.clientHeight, ancho = Math.min(W * 0.84, H * 0.95);
+        const W = cuadro.clientWidth, H = cuadro.clientHeight, ancho = Math.min(W * 0.7, H * 0.8);
         const x = (k + 0.5) / n * ancho - ancho / 2, adelante = k % 2;
-        return `translate(${x.toFixed(1)}px, ${(-H * (adelante ? 0.24 : 0.29)).toFixed(1)}px) scale(${adelante ? 0.52 : 0.47})`;
+        return `translate(${x.toFixed(1)}px, ${(-H * (adelante ? 0.22 : 0.27)).toFixed(1)}px) scale(${adelante ? 0.48 : 0.44})`;
       };
-      function ponerTexto(paso, demora) {
+      function ponerTexto(paso, demora, antes) {
+        // del foco a todos juntos la pregunta queda: solo se suma la pista
+        if (antes && antes.tipo === "foco" && paso.tipo === "foco" && $(".e-pregunta", texto)) return;
+        if (antes && antes.tipo === "foco" && paso.tipo === "todos" && $(".e-pregunta", texto)) {
+          texto.insertAdjacentHTML("beforeend", PISTA); return;
+        }
         texto.classList.add("sale"); texto.classList.remove("entra", "abierto");
         setTimeout(() => {
           texto.innerHTML = textoHTML(paso, g);
@@ -286,21 +296,25 @@
       }
       ir = (i) => {
         const antes = actual === null ? null : ps[actual]; actual = i;
-        const paso = ps[i], k = paso.p ? paso.p.id : "todos";
+        const paso = ps[i], k = paso.p ? paso.p.id : "todos", foco = paso.tipo === "foco";
         cuadro.classList.toggle("solo", !!paso.p);
-        $$(".e-fondo, .e-palabra", cuadro).forEach((c) => c.classList.toggle("on", c.dataset.k === k));
+        cuadro.classList.toggle("en-foco", foco);
+        $$(".e-fondo", cuadro).forEach((c) => c.classList.toggle("on", c.dataset.k === k));
+        $$(".e-palabra", cuadro).forEach((c) => c.classList.toggle("on", !foco && c.dataset.k === k));
+        $$(".e-foco img", cuadro).forEach((im) => im.classList.toggle("on", im.dataset.f === paso.f));
         figuras.forEach((f, j) => {
           const es = !!paso.p && f.dataset.id === paso.p.id;
-          f.classList.toggle("on", !paso.p || es);
+          f.classList.toggle("on", paso.tipo === "todos" || es);
           f.classList.toggle("activa", es);
           if (!paso.p) f.style.transform = enFila(j);
           else if (es) f.style.transform = "none";
           // el que se va da un paso atrás; si venían todos juntos, los demás se desvanecen en su lugar
           else if (antes && antes.p && f.dataset.id === antes.p.id) f.style.transform = "translateY(3%) scale(.93)";
         });
-        ponerTexto(paso, quieto ? 0 : paso.p ? 420 : 300);
+        ponerTexto(paso, quieto ? 0 : paso.p ? 420 : 300, antes);
         programar(i);
       };
+      $(".e-foco", raiz).addEventListener("click", () => { detener(); ir(g.focos.length); });
       const aPersona = (id) => { detener(); const i = ps.findIndex((x) => x.p && x.p.id === id); if (i !== actual) ir(i); };
       $$(".e-cara, .e-figura", raiz).forEach((b) => b.addEventListener("click", () => aPersona(b.dataset.id)));
       $$(".e-seg button", raiz).forEach((b) => b.addEventListener("click", () => { if (b.dataset.g !== grupo) { grupo = b.dataset.g; montar(); } }));

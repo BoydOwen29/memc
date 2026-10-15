@@ -29,12 +29,17 @@ window.MEMC = {
   },
 
   sinopsis: {
-    pendiente: true, // borrador escrito por nosotros: reemplazar por el texto oficial
+    // parafraseada de la reseña de Brisa Martínez para Criticario Teatral (ver "resena")
     parrafos: [
-      "Rita cría sola a sus dos hijos. Diego vive en un mundo de fantasía que le ganó lugar a la realidad. Clara quiere despegarse de una madre que la protege de más y vivir su propia historia.",
-      "Un día llega una noticia imposible: Rita empieza a achicarse. Mientras mamá se hace cada vez más chiquita, la familia tiene que aprender a cuidarse de otra manera.",
-      "Una comedia musical sobre el amor, el paso del tiempo y los vínculos que nos sostienen.",
+      "Rita es la capitana de un barco de tres, y un día empieza a achicarse. Entonces sus hijos tienen que agrandarse de golpe: Diego y Clara salen a pelear contra miedos y dragones, preparan pociones mágicas y aprenden a sostener el timón en un mar que los desborda.",
+      "Crecer es ocupar más lugar, y nadie te enseña a bajar de la fantasía al mundo de los grandes mientras todavía sos chico. Pero la aventura también tiene su belleza: aunque mamá esté cada vez más chiquita, los tres siguen navegando juntos.",
+      "Con canciones y banda en vivo, una comedia musical que se pregunta qué hacemos cuando la luz empieza a apagarse.",
     ],
+    resena: {
+      cita: "Merece la pena verlo, pero, sobre todo, merece la pena sentirlo.",
+      autora: "Brisa Martínez · Criticario Teatral",
+      url: "https://www.instagram.com/p/DeaeJ9rj8Xr/",
+    },
     sello: "Premio Hugo · Mejor musical off · 2016 ·",
     // foto grande que corta la sinopsis
     foto: { src: "img/obra/abrazo-1600.webp", chica: "img/obra/abrazo-800.webp", alt: "Diego y Clara abrazan a Rita" },
