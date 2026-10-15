@@ -280,8 +280,9 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 .js .lectura .w.on { opacity: 1; }
 .lectura .w.clave { color: var(--coral); }
 /* foto grande de la obra: se abre como un telón desde el centro */
-.foto-obra { position: relative; margin: 34px calc(var(--gutter) * -1) 6px; aspect-ratio: 3 / 2; overflow: hidden; }
-.foto-obra img { position: absolute; left: 0; top: -9%; width: 100%; height: 118%; object-fit: cover; translate: 0 var(--py, 0%); }
+/* la foto va entera (sin agrandar ni paralaje): es un recorte de cuerpo entero y no se le pueden cortar las cabezas */
+.foto-obra { position: relative; margin: 34px calc(var(--gutter) * -1) 6px; aspect-ratio: 1600 / 1034; overflow: hidden; }
+.foto-obra img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: contain; }
 /* el recorte va en la imagen y no en el marco: Chrome no "ve" entrar en pantalla un elemento recortado entero */
 .js .foto-obra img { clip-path: inset(0 50% 0 50%); scale: 1.15; transition: clip-path 1.4s var(--curva), scale 1.8s var(--curva); }
 .js .foto-obra.visto img { clip-path: inset(0 0 0 0); scale: 1; }

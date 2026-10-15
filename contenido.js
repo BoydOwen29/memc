@@ -10,7 +10,7 @@ window.MEMC = {
     titulo: "Mamá está más chiquita",
     autores: "de Ignacio Olivera & Juan Pablo Schapira",
     ciudad: "Córdoba",
-    genero: "Comedia musical",
+    genero: "Teatro musical",
     duracion: "", // ej. "90 minutos, sin intervalo"
   },
 
@@ -33,7 +33,7 @@ window.MEMC = {
     parrafos: [
       "Rita es la capitana de un barco de tres, y un día empieza a achicarse. Entonces sus hijos tienen que agrandarse de golpe: Diego y Clara salen a pelear contra miedos y dragones, preparan pociones mágicas y aprenden a sostener el timón en un mar que los desborda.",
       "Crecer es ocupar más lugar, y nadie te enseña a bajar de la fantasía al mundo de los grandes mientras todavía sos chico. Pero la aventura también tiene su belleza: aunque mamá esté cada vez más chiquita, los tres siguen navegando juntos.",
-      "Con canciones y banda en vivo, una comedia musical que se pregunta qué hacemos cuando la luz empieza a apagarse.",
+      "Con canciones y banda en vivo, una obra de teatro musical sobre una familia que descubre que el hogar no es una casa: nosotros somos nuestro lugar.",
     ],
     sello: "Premio Hugo · Mejor musical off · 2016 ·",
     // foto grande que corta la sinopsis

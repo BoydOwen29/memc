@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.11";
+  const VERSION = "1.12";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -47,7 +47,7 @@
   // 02 · La obra
   if (D.sinopsis && D.sinopsis.parrafos.length) {
     const s = D.sinopsis;
-    const claves = /^(achicarse|agrandarse|chiquita|juntos|luz)/i;
+    const claves = /^(achicarse|agrandarse|chiquita|juntos|lugar)/i;
     const palabras = (t) => esc(t).split(/\s+/).map((w) => `<span class="w${claves.test(w) ? " clave" : ""}">${w}</span>`).join(" ");
     const sello = s.sello ? `
       <div class="sello" data-reveal="sello">
@@ -203,9 +203,9 @@
   function cintas(variante) {
     const a = variante === "a"
       ? ["Mamá está más chiquita", "Córdoba"]
-      : ["Comedia musical", "Brux Producciones"];
+      : ["Teatro musical", "Brux Producciones"];
     const b = variante === "a"
-      ? ["Comedia musical", "Viernes 21 h"]
+      ? ["Teatro musical", "Viernes 21 h"]
       : ["Mamá está más chiquita", "Córdoba"];
     const rollo = (arr) => {
       const uno = arr.map((t) => `<span>${esc(t)}</span><b>✦</b>`).join("");
@@ -399,7 +399,6 @@
   const raiz = document.documentElement;
   const portada = $("#portada");
   const parrafos = $$(".lectura p").map((p) => ({ el: p, w: $$(".w", p), n: -1 }));
-  const fotosActor = $$(".foto-obra img");
   const cintasEls = $$(".cinta").map((c) => ({ el: c, r: $(".rodillo", c), dir: +c.dataset.dir, x: 0, ancho: 0, visible: false }));
   let ultimoY = window.scrollY;
   let velocidad = 0;
@@ -461,13 +460,6 @@
     });
 
     if (!quieto) {
-      // Fotos del elenco: leve paralaje
-      fotosActor.forEach((im) => {
-        const r = im.parentElement.getBoundingClientRect();
-        if (r.bottom < 0 || r.top > vh) return;
-        const k = (r.top + r.height / 2 - vh / 2) / vh;
-        im.style.setProperty("--py", (k * -8).toFixed(2) + "%");
-      });
 
       // Cintas: avanzan solas, aceleran con el scroll y se inclinan con el envión
       const inclina = clamp(-velocidad * 0.25, -6, 6);
