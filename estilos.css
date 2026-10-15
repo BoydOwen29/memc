@@ -294,9 +294,9 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 .premio p { margin: 0; font-size: 15px; color: var(--tenue); line-height: 1.5; }
 .duracion { margin-top: 18px; font-size: 15px; color: var(--tenue); }
 
-/* ---------- Elenco y banda: el escenario ----------
-   Todo pasa en una pantalla, sin bajar: la cámara entra en el foco hasta cada personaje y el actor sale adelante,
-   grande, tapando la escena. Solo se animan transform y opacity. */
+/* ---------- Elenco y banda: el afiche ----------
+   Todo pasa en una pantalla, sin bajar: el color de fondo, el nombre gigante detrás y la persona adelante (recortada
+   sin fondo, img/elenco/ e img/banda/). Arranca con todos en fila. Solo se animan transform y opacity. */
 .e-seg { display: flex; gap: 6px; margin-bottom: 12px; }
 .e-seg button {
   flex: 1; min-height: 44px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--linea); background: transparent; cursor: pointer;
@@ -305,64 +305,50 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 }
 .e-seg button[aria-pressed="true"] { background: var(--coral); border-color: var(--coral); color: var(--fondo); }
 .e-cuadro {
-  position: relative; margin: 0 calc(var(--gutter) * -1); height: min(74vh, 680px); height: min(74svh, 680px); overflow: hidden;
-  background: radial-gradient(70% 55% at 50% 30%, #12342a, #0a110e 75%); isolation: isolate;
+  position: relative; margin: 0 calc(var(--gutter) * -1); height: min(76vh, 700px); height: min(76svh, 700px); overflow: hidden;
+  background: var(--fondo); isolation: isolate; container-type: size;
   touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
 }
 @media (min-width: 560px) { .e-cuadro { margin: 0; border-radius: 22px; } }
-.e-camara { position: absolute; left: 0; top: 0; transform-origin: 0 0; transition: transform 1.15s cubic-bezier(.65, 0, .25, 1); will-change: transform; }
-.e-capa { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .7s ease .15s; }
-.e-capa.on { opacity: 1; }
-.e-capa:not(.on) { visibility: hidden; transition: opacity .7s ease .15s, visibility 0s linear .9s; }
-.e-toque { position: absolute; width: 13%; height: 22%; translate: -50% -40%; border: 0; padding: 0; background: transparent; border-radius: 40%; cursor: pointer; touch-action: manipulation; }
-.e-sombra { position: absolute; inset: 0; z-index: 2; background: rgba(6, 11, 9, .55); opacity: 0; transition: opacity .6s ease; pointer-events: none; }
-.e-cuadro.con-recorte .e-sombra { opacity: 1; }
-.e-recorte {
-  position: absolute; left: 50%; bottom: 0; z-index: 3; height: 88%; width: auto; max-width: none; translate: -50% 0;
-  opacity: 0; transform: translateY(7%) scale(.8); transform-origin: 50% 100%; pointer-events: none;
-  transition: opacity .45s ease, transform .45s var(--curva);
+/* fondo de color de cada persona: capas planas que se cruzan por opacidad */
+.e-fondo { position: absolute; inset: 0; opacity: 0; transition: opacity .7s ease; }
+.e-fondo[data-k="todos"] { background: radial-gradient(80% 60% at 50% 35%, #1f3a2f, var(--fondo) 75%); }
+.e-fondo.on { opacity: 1; }
+.e-fondo:not(.on) { visibility: hidden; transition: opacity .7s ease, visibility 0s linear .7s; }
+/* el nombre gigante: atrás lleno y adelante solo el contorno, así se lee aunque la persona lo tape */
+.e-palabra {
+  position: absolute; left: -4%; right: -4%; top: 4%; z-index: 1; margin: 0; text-align: center; white-space: nowrap; pointer-events: none;
+  font: italic 800 27vw/.82 var(--display); font-size: min(27cqw, 30cqh); text-transform: uppercase; letter-spacing: -.01em; color: var(--fondo);
+  opacity: 0; transform: scale(1.14); transition: opacity .45s ease, transform .9s var(--curva);
 }
-.e-recorte:not(.on) { visibility: hidden; transition: opacity .45s ease, transform .45s var(--curva), visibility 0s linear .45s; }
-.e-recorte.on { opacity: 1; transform: none; transition: opacity .8s ease, transform 1.1s var(--curva); }
-/* la luz: una lamparita cuelga arriba, se prende con cada personaje y le tira un haz encima */
-.e-lampara { position: absolute; left: 50%; top: 0; z-index: 6; width: 30px; translate: -50% 0; pointer-events: none; }
-.e-cable { display: block; width: 2px; height: 18px; margin: 0 auto; background: #2a3530; }
-.e-casquillo { display: block; width: 14px; height: 12px; margin: 0 auto; border-radius: 2px 2px 3px 3px; background: linear-gradient(90deg, #6b4e25, #e3c487 45%, #8a6532); }
-.e-bombilla {
-  position: relative; display: block; width: 26px; height: 26px; margin: -2px auto 0; border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #3a4a43, #1a2420 70%); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18);
-  transition: background .3s ease;
+.e-palabra[data-k="todos"] { color: var(--coral); top: 6%; }
+.e-palabra.on { opacity: 1; transform: none; transition: opacity .6s ease .12s, transform 1s var(--curva) .08s; }
+.e-palabra:not(.on) { visibility: hidden; transition: opacity .45s ease, transform .9s var(--curva), visibility 0s linear .9s; }
+.e-borde { z-index: 4; color: transparent; -webkit-text-stroke: 1.5px rgba(13, 19, 16, .85); }
+/* la persona: parada abajo y al centro; en fila, cada una se corre con transform (lo calcula programa.js) */
+.e-figura {
+  position: absolute; left: 50%; bottom: 0; z-index: 2; height: 86%; padding: 0; border: 0; background: none; cursor: pointer;
+  translate: -50% 0; transform-origin: 50% 100%; opacity: 0; touch-action: pan-y;
+  transition: transform .95s var(--curva), opacity .45s ease;
 }
-.e-bombilla::after {
-  content: ""; position: absolute; inset: -28px; border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(255, 224, 150, .55), rgba(255, 224, 150, 0)); opacity: 0; transition: opacity .35s ease;
-}
-.encendido .e-bombilla { background: radial-gradient(circle at 40% 35%, #fffbe9, #ffd98a 45%, #c48a35); animation: prende .6s linear; }
-.encendido .e-bombilla::after { opacity: 1; animation: prende .6s linear; }
-@keyframes prende { 0% { opacity: .2; } 20% { opacity: 1; } 35% { opacity: .35; } 55%, 100% { opacity: 1; } }
-.e-haz {
-  position: absolute; left: 50%; top: 44px; z-index: 3; width: 130%; height: 100%; translate: -50% 0; pointer-events: none;
-  -webkit-clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%); clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
-  background: linear-gradient(rgba(255, 228, 165, .26), rgba(255, 228, 165, .06) 60%, rgba(255, 228, 165, 0) 85%);
-  opacity: 0; transition: opacity .5s ease;
-}
-.encendido .e-haz { opacity: 1; animation: prende .6s linear; }
-.e-apagon { position: absolute; inset: 0; z-index: 4; background: #040806; opacity: 0; pointer-events: none; }
-.e-apagon.corta { animation: corte .8s linear; }
-@keyframes corte { 0% { opacity: 0; } 12% { opacity: .92; } 30% { opacity: .55; } 45% { opacity: .9; } 70% { opacity: .35; } 100% { opacity: 0; } }
-.e-velo { position: absolute; left: 0; right: 0; bottom: 0; height: 52%; z-index: 4; pointer-events: none; background: linear-gradient(transparent, rgba(6, 11, 9, .82) 45%, rgba(6, 11, 9, .95)); }
-.e-texto { position: absolute; left: var(--gutter); right: var(--gutter); bottom: 16px; z-index: 5; }
-.e-papel { margin: 0 0 8px; font: italic 800 clamp(26px, 8vw, 36px)/.9 var(--display); text-transform: uppercase; color: var(--coral); rotate: -5deg; transform-origin: left bottom; }
+.e-figura:nth-of-type(even) { z-index: 3; }
+.e-figura img { height: 100%; width: auto; max-width: none; }
+.e-figura.on { opacity: 1; }
+.e-figura.activa { z-index: 3; transition: transform 1s var(--curva), opacity .6s ease .1s; }
+.e-figura:not(.on) { visibility: hidden; transition: transform .95s var(--curva), opacity .45s ease, visibility 0s linear .95s; }
+.solo .e-figura:not(.activa) { pointer-events: none; }
+.e-velo { position: absolute; left: 0; right: 0; bottom: 0; height: 50%; z-index: 5; pointer-events: none; background: linear-gradient(rgba(13, 19, 16, 0), rgba(13, 19, 16, .8) 48%, rgba(13, 19, 16, .96)); }
+.e-texto { position: absolute; left: var(--gutter); right: var(--gutter); bottom: 16px; z-index: 6; }
+.e-papel { margin: 0 0 8px; font: 700 14px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--arena); }
 .e-pill {
-  display: inline-block; margin: 0; padding: 9px 16px 7px; border-radius: 999px; background: #2bd394; color: #14211b;
+  display: inline-block; margin: 0; padding: 9px 16px 7px; border-radius: 999px; background: var(--tono, var(--coral)); color: #14211b;
   font: 800 clamp(21px, 6.4vw, 28px)/1 var(--display); text-transform: uppercase; letter-spacing: .02em;
 }
-.e-pill.par { background: #dca56c; }
 .e-bio { margin: 10px 0 0; color: #dfe6e1; font-size: 15px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .e-texto.abierto .e-bio { display: block; -webkit-line-clamp: unset; max-height: 38vh; max-height: 38svh; overflow-y: auto; overscroll-behavior: contain; }
 .e-leer { margin-top: 2px; min-height: 44px; padding: 12px 0 4px; border: 0; background: none; cursor: pointer; color: var(--teal-claro); font: 600 13px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; }
-.e-pregunta { margin: 0; font: italic 800 clamp(28px, 8.4vw, 40px)/1 var(--display); text-transform: uppercase; color: #dca56c; rotate: -4deg; }
-.e-pista { margin: 12px 0 0; font: 600 12px/1 var(--display); letter-spacing: .22em; text-transform: uppercase; color: var(--tenue); }
+.e-pregunta { margin: 0; font: italic 800 clamp(28px, 8.4vw, 40px)/1 var(--display); text-transform: uppercase; color: var(--arena); rotate: -4deg; }
+.e-pista { margin: 20px 0 0; font: 600 12px/1 var(--display); letter-spacing: .22em; text-transform: uppercase; color: var(--tenue); }
 .e-texto.entra > * { animation: e-entra .6s var(--curva) both; }
 .e-texto.entra > :nth-child(2) { animation-delay: .07s; }
 .e-texto.entra > :nth-child(3) { animation-delay: .14s; }
@@ -371,14 +357,15 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 .e-texto.sale { opacity: 0; transition: opacity .2s ease; }
 .e-caras { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
 .e-cara {
-  position: relative; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: var(--superficie-2);
-  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .25); touch-action: manipulation; transition: transform .35s var(--curva);
+  position: relative; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: var(--tono, var(--superficie-2));
+  touch-action: manipulation; transition: transform .35s var(--curva);
 }
-.e-cara img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; opacity: .55; transition: opacity .3s ease; }
+.e-cara img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.e-cara::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--fondo); opacity: .45; transition: opacity .3s ease; }
 .e-cara.activa { transform: translateY(-4px); }
-.e-cara.activa img { opacity: 1; }
-.e-cara .aro { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); rotate: -90deg; pointer-events: none; }
-.e-cara .aro circle { fill: none; stroke: var(--coral); stroke-width: 2.4; stroke-dasharray: 100; stroke-dashoffset: 100; stroke-linecap: round; }
+.e-cara.activa::after { opacity: 0; }
+.e-cara .aro { position: absolute; inset: -4px; z-index: 1; width: calc(100% + 8px); height: calc(100% + 8px); rotate: -90deg; pointer-events: none; }
+.e-cara .aro circle { fill: none; stroke: var(--texto); stroke-width: 2.4; stroke-dasharray: 100; stroke-dashoffset: 100; stroke-linecap: round; }
 .e-cara.activa .aro circle { stroke-dashoffset: 0; }
 .e-cara.activa.corre .aro circle { animation: e-aro var(--t, 5.2s) linear both; }
 @keyframes e-aro { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
@@ -562,9 +549,9 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
   .titulo-obra { margin: calc(var(--tw) * .07) 0 calc(var(--tw) * .08); }
   .deslizar { display: none; }
   .seccion { padding-top: 64px; }
-  /* escenario apaisado: el actor a la izquierda, el texto a la derecha */
+  /* afiche apaisado: la persona a la izquierda, el texto a la derecha */
   .e-cuadro { height: 78vh; height: 78svh; }
-  .e-recorte { left: 30%; height: 94%; }
+  .solo .e-figura { left: 28%; height: 92%; }
   .e-velo { left: auto; top: 0; width: 58%; height: auto; background: linear-gradient(90deg, transparent, rgba(6, 11, 9, .85) 35%, rgba(6, 11, 9, .95)); }
   .e-texto { left: 50%; }
   .e-texto.abierto .e-bio { max-height: 44svh; }
@@ -608,8 +595,6 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
   .menu-lista a { transform: none; }
   .visor[open] .visor-pista { animation: none; }
   .dock-nombre.cambia { animation: none; }
-  .e-camara { transition: none; }
-  .e-recorte, .e-recorte.on { transform: none; }
+  .e-figura, .e-figura.activa, .e-figura:not(.on), .e-palabra, .e-palabra.on { transition-property: opacity, visibility; }
   .e-cara.activa { transform: none; }
-  .encendido .e-bombilla, .encendido .e-bombilla::after, .encendido .e-haz { animation: none; }
 }

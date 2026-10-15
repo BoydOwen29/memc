@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.8";
+  const VERSION = "1.9";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -68,7 +68,7 @@
     `, cintas("a"));
   }
 
-  // 03 · Elenco y banda: un escenario de una pantalla (ver "Escenario" más abajo)
+  // Elenco y banda: un afiche de una pantalla (ver "El afiche" más abajo)
   if ((D.elenco && D.elenco.length) || (D.banda && D.banda.length)) {
     agregar("elenco", "Elenco", "oro", `
       ${kicker("En escena")}
@@ -214,30 +214,27 @@
     return `<div class="cintas" aria-hidden="true" data-reveal="cintas"><div class="cinta b" data-dir="1">${rollo(b)}</div><div class="cinta a" data-dir="-1">${rollo(a)}</div></div>`;
   }
 
-  // ---------- Escenario del elenco y la banda ----------
-  // Todo pasa en el mismo lugar: la cámara entra en el foco hasta cada personaje y el actor sale adelante, grande,
-  // tapando la escena. Va solo mientras está en pantalla (en el orden del video); se frena apenas alguien toca.
-  (function escenario() {
+  // ---------- Elenco y banda: el afiche ----------
+  // Todo pasa en el mismo lugar, como un afiche que cambia: el color de fondo, el nombre gigante detrás y la persona
+  // adelante, que lo tapa. Arranca con todos juntos (el saludo final) y después pasa uno por uno. Va solo mientras
+  // está en pantalla y se frena apenas alguien toca. Solo se animan transform y opacity.
+  (function afiche() {
     const raiz = $("#escenario");
     if (!raiz) return;
-    const E = "img/escena/";
     const T = 5200; // tiempo por persona
-    // centro de cada cara dentro del foco (fracción del ancho y del alto de la imagen)
-    const CARAS = { german: [0.7807, 0.3672], rita: [0.5004, 0.3786], diego: [0.3202, 0.3902], clara: [0.6663, 0.4236], alicia: [0.1547, 0.4063],
-      matias: [0.4486, 0.5054], pablo: [0.3457, 0.3375], fran: [0.4825, 0.3206], tobias: [0.5957, 0.5371], gonzalo: [0.624, 0.3048] };
+    const TONOS = ["#ff856e", "#34c4aa", "#c89d4c", "#e4d5b6", "#2bd394"];
+    const primerNombre = (n) => n.split(" ")[0];
     const GRUPOS = {
-      elenco: { gente: (D.elenco || []).map((p) => ({ ...p, id: p.foco, papel: p.personaje })), portada: false, intro: D.elencoIntro || "", recorte: true },
-      banda: { gente: (D.banda || []).map((p) => ({ ...p, id: p.foco, papel: p.rol })), portada: false, intro: D.bandaIntro || "", recorte: false },
+      elenco: { titulo: "Elenco", intro: D.elencoIntro || "", gente: (D.elenco || []).map((p) => ({ ...p, palabra: p.personaje, papel: "" })) },
+      banda: { titulo: "Banda", intro: D.bandaIntro || "", gente: (D.banda || []).map((p) => ({ ...p, palabra: primerNombre(p.nombre), papel: p.rol })) },
     };
     let grupo = GRUPOS.elenco.gente.length ? "elenco" : "banda";
     let reloj = null, auto = true, actual = null, visible = false, iniciado = false;
-    let ps = [], ir = () => {}, W = 0, H = 0;
-    const pasos = (g) => [...(g.portada ? [{ tipo: "portada" }] : []), { tipo: "pregunta" }, ...g.gente.map((p, k) => ({ tipo: "persona", p, k }))];
+    let ps = [], ir = () => {};
     function textoHTML(paso, g) {
-      if (paso.tipo === "portada") return "";
-      if (paso.tipo === "pregunta") return `<p class="e-pregunta">${esc(g.intro)}</p><p class="e-pista">Tocá una cara o deslizá</p>`;
+      if (!paso.p) return `<p class="e-pregunta">${esc(g.intro)}</p><p class="e-pista">Tocá a alguien o deslizá</p>`;
       const p = paso.p;
-      return `<p class="e-papel">${esc(p.papel)}</p><h3 class="e-pill${paso.k % 2 ? " par" : ""}">${esc(p.nombre)}</h3>` +
+      return `${p.papel ? `<p class="e-papel">${esc(p.papel)}</p>` : ""}<h3 class="e-pill" style="--tono:${p.tono}">${esc(p.nombre)}</h3>` +
         (p.bio ? `<p class="e-bio">${esc(p.bio)}</p><button class="e-leer" type="button">Leer más</button>` : "");
     }
     function detener() { auto = false; clearTimeout(reloj); $$(".e-cara", raiz).forEach((c) => c.classList.remove("corre")); }
@@ -248,44 +245,36 @@
       if (!auto || !visible) return;
       const c = ps[i].p && caras.find((x) => x.dataset.id === ps[i].p.id);
       if (c && !quieto) { void c.offsetWidth; c.classList.add("corre"); }
-      const sig = i + 1 < ps.length ? i + 1 : ps.findIndex((x) => x.p);
-      reloj = setTimeout(() => ir(sig), ps[i].p ? T : 2400);
+      const sig = i + 1 < ps.length ? i + 1 : 1;
+      reloj = setTimeout(() => ir(sig), ps[i].p ? T : 3000);
     }
     function montar() {
-      const g = GRUPOS[grupo];
-      ps = pasos(g); actual = null; clearTimeout(reloj);
+      const g = GRUPOS[grupo], n = g.gente.length;
+      ps = [{ p: null }, ...g.gente.map((p) => ({ p }))]; actual = null; clearTimeout(reloj);
+      g.gente.forEach((p, k) => { p.tono = TONOS[k % TONOS.length]; });
       const hay = (k) => GRUPOS[k].gente.length;
+      const capa = (k, txt, clase) => `<p class="${clase}" data-k="${esc(k)}" aria-hidden="true">${esc(txt)}</p>`;
       raiz.style.setProperty("--t", T + "ms");
       raiz.innerHTML = `${hay("elenco") && hay("banda") ? `<div class="e-seg">
           <button type="button" data-g="elenco" aria-pressed="${grupo === "elenco"}">Elenco</button>
           <button type="button" data-g="banda" aria-pressed="${grupo === "banda"}">Banda</button></div>` : ""}
         <div class="e-cuadro">
-          <div class="e-camara">
-            <img class="e-capa on" data-k="vacia" src="${E}foco-${grupo}-vacia.webp" alt="" decoding="async">
-            ${g.portada ? `<img class="e-capa" data-k="portada" src="${E}foco-portada.webp" alt="Mamá está más chiquita" decoding="async">` : ""}
-            ${g.gente.map((p) => `<img class="e-capa" data-k="${esc(p.id)}" src="${E}foco-${esc(p.id)}.webp" alt="" loading="lazy" decoding="async">`).join("")}
-            ${g.gente.map((p) => { const c = CARAS[p.id] || [0.5, 0.5]; return `<button class="e-toque" type="button" data-id="${esc(p.id)}" style="left:${(c[0] * 100).toFixed(2)}%;top:${(c[1] * 100).toFixed(2)}%" aria-label="Conocer a ${esc(p.nombre)}"></button>`; }).join("")}
-          </div>
-          <div class="e-sombra"></div>
-          <div class="e-haz" aria-hidden="true"></div>
-          ${g.recorte ? g.gente.map((p) => `<img class="e-recorte" data-k="${esc(p.id)}" src="${E}recorte-${esc(p.id)}.webp" alt="${esc(p.nombre)}" loading="lazy" decoding="async">`).join("") : ""}
+          <div class="e-fondo on" data-k="todos"></div>
+          ${g.gente.map((p) => `<div class="e-fondo" data-k="${esc(p.id)}" style="background:${p.tono}"></div>`).join("")}
+          ${capa("todos", g.titulo, "e-palabra on")}${g.gente.map((p) => capa(p.id, p.palabra, "e-palabra")).join("")}
+          ${g.gente.map((p, k) => `<button class="e-figura" type="button" data-id="${esc(p.id)}" style="--k:${k}" aria-label="Conocer a ${esc(p.nombre)}"><img src="img/${grupo}/${esc(p.id)}.webp" alt="" decoding="async"></button>`).join("")}
+          ${g.gente.map((p) => capa(p.id, p.palabra, "e-palabra e-borde")).join("")}
           <div class="e-velo"></div>
-          <div class="e-apagon" aria-hidden="true"></div>
-          <div class="e-lampara" aria-hidden="true"><span class="e-cable"></span><span class="e-casquillo"></span><span class="e-bombilla"></span></div>
           <div class="e-texto" aria-live="polite"></div>
         </div>
-        <div class="e-caras">${g.gente.map((p) => `<button class="e-cara" type="button" data-id="${esc(p.id)}" aria-label="${esc(p.nombre)}"><img src="${E}cara-${esc(p.id)}.webp" alt="" loading="lazy" decoding="async"><svg class="aro" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" pathLength="100"/></svg></button>`).join("")}</div>`;
-      const cuadro = $(".e-cuadro", raiz), cam = $(".e-camara", raiz), texto = $(".e-texto", raiz);
-      const medir = () => { W = cuadro.clientWidth; H = cuadro.clientHeight; cam.style.width = cam.style.height = W + "px"; };
-      medir();
-      function encuadre(paso) {
-        if (!paso.p) { // vista general: el foco entero arriba
-          const s = Math.min(1, (H * 0.66) / W);
-          return `translate(${((W - W * s) / 2).toFixed(1)}px, ${(H * 0.04).toFixed(1)}px) scale(${s.toFixed(3)})`;
-        }
-        const c = CARAS[paso.p.id] || [0.5, 0.5], s = g.recorte ? 2.3 : 2.7, fy = g.recorte ? 0.3 : 0.34;
-        return `translate(${(W * 0.5 - c[0] * W * s).toFixed(1)}px, ${(H * fy - c[1] * W * s).toFixed(1)}px) scale(${s})`;
-      }
+        <div class="e-caras">${g.gente.map((p) => `<button class="e-cara" type="button" data-id="${esc(p.id)}" style="--tono:${p.tono}" aria-label="${esc(p.nombre)}"><img src="img/${grupo}/${esc(p.id)}-cara.webp" alt="" loading="lazy" decoding="async"><svg class="aro" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" pathLength="100"/></svg></button>`).join("")}</div>`;
+      const cuadro = $(".e-cuadro", raiz), texto = $(".e-texto", raiz), figuras = $$(".e-figura", raiz);
+      // todos juntos: en fila, más chicos y arriba; los impares un poco más adelante
+      const enFila = (k) => {
+        const W = cuadro.clientWidth, H = cuadro.clientHeight, ancho = Math.min(W * 0.84, H * 0.95);
+        const x = (k + 0.5) / n * ancho - ancho / 2, adelante = k % 2;
+        return `translate(${x.toFixed(1)}px, ${(-H * (adelante ? 0.24 : 0.29)).toFixed(1)}px) scale(${adelante ? 0.52 : 0.47})`;
+      };
       function ponerTexto(paso, demora) {
         texto.classList.add("sale"); texto.classList.remove("entra", "abierto");
         setTimeout(() => {
@@ -296,27 +285,26 @@
         }, demora);
       }
       ir = (i) => {
-        actual = i; const paso = ps[i];
-        const k = paso.tipo === "portada" ? "portada" : paso.p ? paso.p.id : "vacia";
-        $$(".e-recorte", raiz).forEach((r) => r.classList.remove("on"));
-        cuadro.classList.remove("con-recorte", "encendido");
-        // corte de luz: la escena parpadea a oscuro mientras la cámara viaja
-        if (!quieto) { const a = $(".e-apagon", raiz); a.classList.remove("corta"); void a.offsetWidth; a.classList.add("corta"); }
-        if (paso.p) setTimeout(() => { if (actual === i) cuadro.classList.add("encendido"); }, quieto ? 0 : 620);
-        cam.style.transform = encuadre(paso);
-        $$(".e-capa", cam).forEach((c) => c.classList.toggle("on", c.dataset.k === k));
-        if (paso.p && g.recorte) setTimeout(() => {
-          if (actual !== i) return;
-          cuadro.classList.add("con-recorte");
-          const r = $(`.e-recorte[data-k="${paso.p.id}"]`, raiz); if (r) r.classList.add("on");
-        }, quieto ? 0 : 620);
-        ponerTexto(paso, quieto ? 0 : paso.p ? 700 : 300);
+        const antes = actual === null ? null : ps[actual]; actual = i;
+        const paso = ps[i], k = paso.p ? paso.p.id : "todos";
+        cuadro.classList.toggle("solo", !!paso.p);
+        $$(".e-fondo, .e-palabra", cuadro).forEach((c) => c.classList.toggle("on", c.dataset.k === k));
+        figuras.forEach((f, j) => {
+          const es = !!paso.p && f.dataset.id === paso.p.id;
+          f.classList.toggle("on", !paso.p || es);
+          f.classList.toggle("activa", es);
+          if (!paso.p) f.style.transform = enFila(j);
+          else if (es) f.style.transform = "none";
+          // el que se va da un paso atrás; si venían todos juntos, los demás se desvanecen en su lugar
+          else if (antes && antes.p && f.dataset.id === antes.p.id) f.style.transform = "translateY(3%) scale(.93)";
+        });
+        ponerTexto(paso, quieto ? 0 : paso.p ? 420 : 300);
         programar(i);
       };
-      const aPersona = (id) => { detener(); ir(ps.findIndex((x) => x.p && x.p.id === id)); };
-      $$(".e-cara, .e-toque", raiz).forEach((b) => b.addEventListener("click", () => aPersona(b.dataset.id)));
+      const aPersona = (id) => { detener(); const i = ps.findIndex((x) => x.p && x.p.id === id); if (i !== actual) ir(i); };
+      $$(".e-cara, .e-figura", raiz).forEach((b) => b.addEventListener("click", () => aPersona(b.dataset.id)));
       $$(".e-seg button", raiz).forEach((b) => b.addEventListener("click", () => { if (b.dataset.g !== grupo) { grupo = b.dataset.g; montar(); } }));
-      // deslizar de costado para pasar de personaje
+      // deslizar de costado para pasar de persona
       let x0 = null, y0 = 0;
       cuadro.addEventListener("pointerdown", (e) => { x0 = e.clientX; y0 = e.clientY; });
       cuadro.addEventListener("pointercancel", () => { x0 = null; });
@@ -324,18 +312,18 @@
         if (x0 === null) return; const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
         if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { detener(); ir(Math.min(ps.length - 1, Math.max(0, (actual ?? 0) + (dx < 0 ? 1 : -1)))); }
       });
-      addEventListener("resize", () => { medir(); if (actual !== null) cam.style.transform = encuadre(ps[actual]); });
-      cam.style.transition = "none"; cam.style.transform = encuadre(ps[0]); void cam.offsetWidth; cam.style.transition = "";
+      addEventListener("resize", () => { if (actual === 0) figuras.forEach((f, j) => { f.style.transform = enFila(j); }); });
+      figuras.forEach((f, j) => { f.style.transition = "none"; f.style.transform = enFila(j); });
+      void cuadro.offsetWidth; figuras.forEach((f) => { f.style.transition = ""; });
       ir(0);
     }
     montar();
     // va solo mientras se ve; si sale de pantalla, se pausa
     new IntersectionObserver(([en]) => {
       visible = en.isIntersecting;
-      // con el escenario en pantalla, la barra de abajo se corre: no tapa las caras
+      // con el afiche en pantalla, la barra de abajo se corre: no tapa las caras
       document.documentElement.classList.toggle("en-escena", visible);
       if (visible && auto && actual !== null) {
-        // la primera vez arranca desde el principio, para que se vea la entrada
         if (!iniciado) { iniciado = true; ir(0); } else programar(actual);
       } else clearTimeout(reloj);
     }, { threshold: 0.5 }).observe(raiz);
