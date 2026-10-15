@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.13";
+  const VERSION = "1.14";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -226,8 +226,8 @@
     const TONOS = ["#ff856e", "#34c4aa", "#c89d4c", "#e4d5b6", "#2bd394"];
     const primerNombre = (n) => n.split(" ")[0];
     const GRUPOS = {
-      elenco: { focos: ["portada", "elenco"], titulo: "Elenco", intro: D.elencoIntro || "", gente: (D.elenco || []).map((p) => ({ ...p, palabra: p.personaje, papel: "" })) },
-      banda: { focos: ["banda"], titulo: "Banda", intro: D.bandaIntro || "", gente: (D.banda || []).map((p) => ({ ...p, palabra: primerNombre(p.nombre), papel: p.rol })) },
+      elenco: { focos: ["portada", "elenco-todos"], titulo: "Elenco", intro: D.elencoIntro || "", gente: (D.elenco || []).map((p) => ({ ...p, palabra: p.personaje, papel: "" })) },
+      banda: { focos: ["banda-todos"], titulo: "Banda", intro: D.bandaIntro || "", gente: (D.banda || []).map((p) => ({ ...p, palabra: primerNombre(p.nombre), papel: p.rol })) },
     };
     let grupo = GRUPOS.elenco.gente.length ? "elenco" : "banda";
     let reloj = null, auto = true, actual = null, visible = false, iniciado = false;
@@ -265,13 +265,13 @@
           <div class="e-fondo on" data-k="todos"></div>
           ${g.gente.map((p) => `<div class="e-fondo" data-k="${esc(p.id)}" style="background:${p.tono}"></div>`).join("")}
           ${capa("todos", g.titulo, "e-palabra on")}${g.gente.map((p) => capa(p.id, p.palabra, "e-palabra")).join("")}
-          ${g.gente.map((p, k) => `<button class="e-figura" type="button" data-id="${esc(p.id)}" style="--k:${k}" aria-label="Conocer a ${esc(p.nombre)}"><img src="img/${grupo}/${esc(p.id)}.webp" alt="" decoding="async"></button>`).join("")}
+          ${g.gente.map((p, k) => `<button class="e-figura" type="button" data-id="${esc(p.id)}" style="--k:${k}" aria-label="Conocer a ${esc(p.nombre)}"><img src="img/${grupo}/${esc(p.id)}.webp?v=${VERSION}" alt="" decoding="async"></button>`).join("")}
           ${g.gente.map((p) => capa(p.id, p.palabra, "e-palabra e-borde")).join("")}
-          <button class="e-foco" type="button" aria-label="Ver a todos">${g.focos.map((f) => `<img data-f="${f}" src="img/foco/${f}.webp" alt="" decoding="async">`).join("")}</button>
+          <button class="e-foco" type="button" aria-label="Ver a todos">${g.focos.map((f) => `<img data-f="${f}" src="img/foco/${f}.webp?v=${VERSION}" alt="" decoding="async">`).join("")}</button>
           <div class="e-velo"></div>
           <div class="e-texto" aria-live="polite"></div>
         </div>
-        <div class="e-caras">${g.gente.map((p) => `<button class="e-cara" type="button" data-id="${esc(p.id)}" style="--tono:${p.tono}" aria-label="${esc(p.nombre)}"><img src="img/${grupo}/${esc(p.id)}-cara.webp" alt="" loading="lazy" decoding="async"><svg class="aro" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" pathLength="100"/></svg></button>`).join("")}</div>`;
+        <div class="e-caras">${g.gente.map((p) => `<button class="e-cara" type="button" data-id="${esc(p.id)}" style="--tono:${p.tono}" aria-label="${esc(p.nombre)}"><img src="img/${grupo}/${esc(p.id)}-cara.webp?v=${VERSION}" alt="" loading="lazy" decoding="async"><svg class="aro" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" pathLength="100"/></svg></button>`).join("")}</div>`;
       const cuadro = $(".e-cuadro", raiz), texto = $(".e-texto", raiz), figuras = $$(".e-figura", raiz);
       // todos juntos: en fila, más chicos y arriba; los impares un poco más adelante
       const enFila = (k) => {
