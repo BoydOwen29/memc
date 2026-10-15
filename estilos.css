@@ -295,9 +295,10 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 .premio p { margin: 0; font-size: 15px; color: var(--tenue); line-height: 1.5; }
 .duracion { margin-top: 18px; font-size: 15px; color: var(--tenue); }
 
-/* ---------- Elenco y banda: el afiche ----------
-   Todo pasa en una pantalla, sin bajar: el color de fondo, el nombre gigante detrás y la persona adelante (recortada
-   sin fondo, img/elenco/ e img/banda/). Arranca con todos en fila. Solo se animan transform y opacity. */
+/* ---------- Elenco y banda: el foco ----------
+   Todo pasa en una pantalla, sin bajar: el foco de vidrio con las siluetas y, a cada toque, una persona que sale de su
+   silueta, grande, sobre el color del foco, con su nombre gigante detrás (lleno atrás, contorno adelante). Los
+   retratos (img/elenco/, img/banda/) traen el halo de luz de contra. Solo se animan transform y opacity. */
 .e-seg { display: flex; gap: 6px; margin-bottom: 12px; }
 .e-seg button {
   flex: 1; min-height: 44px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--linea); background: transparent; cursor: pointer;
@@ -305,41 +306,48 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
   transition: background-color .25s ease, color .25s ease, border-color .25s ease;
 }
 .e-seg button[aria-pressed="true"] { background: var(--coral); border-color: var(--coral); color: var(--fondo); }
+/* el fondo es el del foco: verde agua oscuro */
 .e-cuadro {
+  --foco-borde: #021d19; --foco-medio: #0b2e26; --foco-brillo: #1a6a58;
   position: relative; margin: 0 calc(var(--gutter) * -1); height: min(76vh, 700px); height: min(76svh, 700px); overflow: hidden;
-  background: var(--fondo); isolation: isolate; container-type: size;
+  background: var(--foco-borde); isolation: isolate; container-type: size; cursor: pointer;
   touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
 }
 @media (min-width: 560px) { .e-cuadro { margin: 0; border-radius: 22px; } }
-/* fondo de color de cada persona: capas planas que se cruzan por opacidad */
-.e-fondo { position: absolute; inset: 0; opacity: 0; transition: opacity .7s ease; }
-.e-fondo[data-k="todos"] { background: radial-gradient(80% 60% at 50% 35%, #1f3a2f, var(--fondo) 75%); }
-.e-fondo.on { opacity: 1; }
-.e-fondo:not(.on) { visibility: hidden; transition: opacity .7s ease, visibility 0s linear .7s; }
+/* adentro del foco: más claro arriba, donde pega la luz */
+.e-fondo {
+  position: absolute; inset: 0; opacity: 0; transition: opacity .8s ease;
+  background: radial-gradient(75% 55% at 50% 30%, var(--foco-brillo), var(--foco-medio) 55%, var(--foco-borde));
+}
+.solo .e-fondo { opacity: 1; }
 /* el nombre gigante: atrás lleno y adelante solo el contorno, así se lee aunque la persona lo tape */
 .e-palabra {
   position: absolute; left: -4%; right: -4%; top: 4%; z-index: 1; margin: 0; text-align: center; white-space: nowrap; pointer-events: none;
-  font: italic 800 27vw/.82 var(--display); font-size: min(27cqw, 30cqh); text-transform: uppercase; letter-spacing: -.01em; color: var(--fondo);
+  font: italic 800 27vw/.82 var(--display); font-size: min(27cqw, 30cqh); text-transform: uppercase; letter-spacing: -.01em; color: #0d3a30;
   opacity: 0; transform: scale(1.14); transition: opacity .45s ease, transform .9s var(--curva);
 }
-.e-palabra[data-k="todos"] { color: var(--coral); top: 6%; }
-.e-palabra.on { opacity: 1; transform: none; transition: opacity .6s ease .12s, transform 1s var(--curva) .08s; }
+.e-palabra.on { opacity: 1; transform: none; transition: opacity .6s ease .15s, transform 1s var(--curva) .1s; }
 .e-palabra:not(.on) { visibility: hidden; transition: opacity .45s ease, transform .9s var(--curva), visibility 0s linear .9s; }
-.e-borde { z-index: 4; color: transparent; -webkit-text-stroke: 1.5px rgba(13, 19, 16, .85); }
-/* la persona: parada abajo y al centro; en fila, cada una se corre con transform (lo calcula programa.js) */
+.e-borde { z-index: 4; color: transparent; -webkit-text-stroke: 1.5px rgba(160, 245, 220, .45); }
+/* la persona: parada abajo y al centro; entra desde su silueta en el foco (el transform lo calcula programa.js) */
 .e-figura {
-  position: absolute; left: 50%; bottom: 0; z-index: 2; height: 86%; padding: 0; border: 0; background: none; cursor: pointer;
-  translate: -50% 0; transform-origin: 50% 100%; opacity: 0; touch-action: pan-y;
-  transition: transform .95s var(--curva), opacity .45s ease;
+  position: absolute; left: 50%; bottom: 0; z-index: 2; height: 86%; translate: -50% 0; transform-origin: 50% 10%; opacity: 0; pointer-events: none;
+  transition: transform .6s cubic-bezier(.5, 0, .75, 0), opacity .35s ease;
 }
-.e-figura:nth-of-type(even) { z-index: 3; }
 .e-figura img { height: 100%; width: auto; max-width: none; }
-.e-figura.on { opacity: 1; }
-.e-figura.activa { z-index: 3; transition: transform 1s var(--curva), opacity .6s ease .1s; }
-.e-figura:not(.on) { visibility: hidden; transition: transform .95s var(--curva), opacity .45s ease, visibility 0s linear .95s; }
-.solo .e-figura:not(.activa) { pointer-events: none; }
-.e-velo { position: absolute; left: 0; right: 0; bottom: 0; height: 50%; z-index: 5; pointer-events: none; background: linear-gradient(rgba(13, 19, 16, 0), rgba(13, 19, 16, .8) 48%, rgba(13, 19, 16, .96)); }
-.e-texto { position: absolute; left: var(--gutter); right: var(--gutter); bottom: 16px; z-index: 6; }
+.e-figura.on { opacity: 1; transition: transform 1.05s var(--curva), opacity .5s ease .12s; }
+.e-figura:not(.on) { visibility: hidden; transition: transform .6s cubic-bezier(.5, 0, .75, 0), opacity .35s ease, visibility 0s linear .6s; }
+/* el foco: tal cual la imagen; al entrar a una persona se agranda hacia su silueta y se desvanece */
+.e-foco {
+  position: absolute; left: 50%; top: 0; z-index: 4; width: min(100%, 72vh); aspect-ratio: 1; padding: 0; border: 0; background: none; cursor: pointer;
+  translate: -50% 0; opacity: 0; transform: scale(2.6); visibility: hidden; touch-action: pan-y;
+  transition: opacity .55s ease, transform 1s cubic-bezier(.55, 0, .7, .3), visibility 0s linear 1s;
+}
+@supports (width: 1cqh) { .e-foco { width: min(100cqw, 66cqh); } }
+.e-foco img { width: 100%; height: 100%; }
+.en-foco .e-foco { opacity: 1; transform: none; visibility: visible; transition: opacity .8s ease .1s, transform 1.1s var(--curva); }
+.e-velo { position: absolute; left: 0; right: 0; bottom: 0; height: 50%; z-index: 5; pointer-events: none; background: linear-gradient(rgba(2, 27, 23, 0), rgba(2, 27, 23, .82) 48%, rgba(2, 27, 23, .97)); }
+.e-texto { position: absolute; left: var(--gutter); right: var(--gutter); bottom: 16px; z-index: 6; cursor: auto; }
 .e-papel { margin: 0 0 8px; font: 700 14px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--arena); }
 .e-pill {
   display: inline-block; margin: 0; padding: 9px 16px 7px; border-radius: 999px; background: var(--tono, var(--coral)); color: #14211b;
@@ -358,7 +366,7 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 .e-texto.sale { opacity: 0; transition: opacity .2s ease; }
 .e-caras { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
 .e-cara {
-  position: relative; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: var(--tono, var(--superficie-2));
+  position: relative; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: #0b2e26;
   touch-action: manipulation; transition: transform .35s var(--curva);
 }
 .e-cara img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
@@ -366,21 +374,8 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
 .e-cara.activa { transform: translateY(-4px); }
 .e-cara.activa::after { opacity: 0; }
 .e-cara .aro { position: absolute; inset: -4px; z-index: 1; width: calc(100% + 8px); height: calc(100% + 8px); rotate: -90deg; pointer-events: none; }
-.e-cara .aro circle { fill: none; stroke: var(--texto); stroke-width: 2.4; stroke-dasharray: 100; stroke-dashoffset: 100; stroke-linecap: round; }
+.e-cara .aro circle { fill: none; stroke: #7ef0cf; stroke-width: 2.4; stroke-dasharray: 100; stroke-dashoffset: 100; stroke-linecap: round; transition: stroke-dashoffset .6s var(--curva); }
 .e-cara.activa .aro circle { stroke-dashoffset: 0; }
-.e-cara.activa.corre .aro circle { animation: e-aro var(--t, 5.2s) linear both; }
-@keyframes e-aro { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
-/* al principio, las imágenes del foco que armaron (tal cual, solo se funden una en otra) */
-.e-foco {
-  position: absolute; left: 50%; top: 0; z-index: 4; width: min(100%, 72vh); aspect-ratio: 1; padding: 0; border: 0; background: none; cursor: pointer;
-  translate: -50% 0; opacity: 0; visibility: hidden; touch-action: pan-y; transition: opacity .8s ease, visibility 0s linear .8s;
-}
-@supports (width: 1cqh) { .e-foco { width: min(100cqw, 66cqh); } }
-.en-foco .e-foco { opacity: 1; visibility: visible; transition: opacity .6s ease; }
-.e-foco img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .9s ease; }
-.e-foco img.on { opacity: 1; }
-/* al aparecer todos juntos, de a uno */
-.e-cuadro:not(.solo) .e-figura.on { transition: transform .95s var(--curva), opacity .6s ease calc(.2s + var(--k) * 90ms); }
 
 /* ---------- Canciones ---------- */
 .canciones { list-style: none; margin: 0; padding: 0; counter-reset: c; }
@@ -561,10 +556,10 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
   .titulo-obra { margin: calc(var(--tw) * .07) 0 calc(var(--tw) * .08); }
   .deslizar { display: none; }
   .seccion { padding-top: 64px; }
-  /* afiche apaisado: la persona a la izquierda, el texto a la derecha */
+  /* apaisado: la persona a la izquierda, el texto a la derecha */
   .e-cuadro { height: 78vh; height: 78svh; }
   .solo .e-figura { left: 28%; height: 92%; }
-  .e-velo { left: auto; top: 0; width: 58%; height: auto; background: linear-gradient(90deg, transparent, rgba(6, 11, 9, .85) 35%, rgba(6, 11, 9, .95)); }
+  .e-velo { left: auto; top: 0; width: 58%; height: auto; background: linear-gradient(90deg, rgba(2, 27, 23, 0), rgba(2, 27, 23, .85) 35%, rgba(2, 27, 23, .96)); }
   .e-texto { left: 50%; }
   .e-texto.abierto .e-bio { max-height: 44svh; }
 }
@@ -607,6 +602,6 @@ html:not(.js) .cel .tachado { stroke-dashoffset: 0; }
   .menu-lista a { transform: none; }
   .visor[open] .visor-pista { animation: none; }
   .dock-nombre.cambia { animation: none; }
-  .e-figura, .e-figura.activa, .e-figura:not(.on), .e-cuadro:not(.solo) .e-figura.on, .e-palabra, .e-palabra.on, .e-foco, .en-foco .e-foco { transition-property: opacity, visibility; }
+  .e-figura, .e-figura.on, .e-figura:not(.on), .e-palabra, .e-palabra.on, .e-foco, .en-foco .e-foco { transition-property: opacity, visibility; }
   .e-cara.activa { transform: none; }
 }
