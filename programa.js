@@ -2,7 +2,7 @@
 // La versión se publica con herramientas/publicar.js, que la copia a los ?v= de index.html.
 (function () {
   "use strict";
-  const VERSION = "1.12";
+  const VERSION = "1.13";
   const D = window.MEMC;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -176,7 +176,7 @@
     agregar("gracias", "Gracias", "coral", `
       <div class="centrado">${titulo(D.cierre.titulo)}</div>
       <div class="escenario" data-reveal="escenario"><img src="img/figura.webp" alt=""></div>
-      <p class="leyenda" data-reveal="sube">Mamá, cada vez más chiquita.</p>
+      <p class="leyenda" data-reveal="sube">Qué raro, ¿será que me estoy haciendo más chiquita?</p>
       ${D.cierre.texto ? `<p class="texto" data-reveal="sube">${esc(D.cierre.texto)}</p>` : ""}
       <div class="botones" data-reveal="sube">${redes.join("")}</div>
     `);
