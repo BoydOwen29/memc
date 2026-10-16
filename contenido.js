@@ -80,7 +80,7 @@ window.MEMC = {
   ficha: [
     { rol: "Libro", nombres: ["Ignacio Olivera"] },
     { rol: "Música y letras", nombres: ["Juan Pablo Schapira"] },
-    { rol: "Dirección", nombres: ["Mailen Escudero"] },
+    { rol: "Dirección", nombres: ["Mailen Escuredo"] },
     { rol: "Dirección musical", nombres: ["Matías Ardiles"] },
     { rol: "Asistencia de producción y redes", nombres: ["Valentina Marino", "Martina Vargas"] },
     { rol: "Iluminación", nombres: ["Hernán Córdoba"] },
